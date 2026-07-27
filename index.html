@@ -4,204 +4,96 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ONE LDN — Consumables</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
     html, body {
       width: 100%; min-height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #0a0a0a; color: #f0f0f0; font-size: 14px;
     }
-
     .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
 
-    /* ── Header ── */
-    .header {
-      display: flex; align-items: center; gap: 16px;
-      margin-bottom: 22px; flex-wrap: wrap;
-    }
+    .header { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
     .header-title { flex: 1; min-width: 200px; }
     .header h1 { font-size: 24px; font-weight: 700; line-height: 1.2; }
     .header h1 .accent { color: #e8c547; }
     .header .subtitle { font-size: 12px; color: #666; margin-top: 3px; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
 
-    /* ── Buttons ── */
-    .btn {
-      border: none; border-radius: 8px;
-      padding: 9px 16px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all .2s; white-space: nowrap;
-    }
+    .btn { border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap; }
     .btn-primary { background: #e8c547; color: #0a0a0a; }
     .btn-primary:hover { background: #c9a93a; }
     .btn-secondary { background: transparent; border: 1px solid #2a2a2a; color: #999; }
     .btn-secondary:hover { border-color: #e8c547; color: #f0f0f0; }
     .btn-danger { background: rgba(248,113,113,.15); border: 1px solid #f87171; color: #f87171; }
-    .btn-danger:hover { background: rgba(248,113,113,.25); }
     .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
     .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 5px; }
+    a.link { color: #60a5fa; text-decoration: none; }
+    a.link:hover { text-decoration: underline; }
 
-    /* ── KPI Row ── */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px; margin-bottom: 22px;
-    }
-    .kpi-card {
-      background: #111; border: 1px solid #1e1e1e;
-      border-radius: 12px; padding: 16px 18px;
-      border-top: 3px solid transparent;
-    }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .kpi-card { background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 16px 18px; border-top: 3px solid transparent; }
     .kpi-card.gold  { border-top-color: #e8c547; }
     .kpi-card.red   { border-top-color: #f87171; }
     .kpi-card.amber { border-top-color: #fb923c; }
+    .kpi-card.blue  { border-top-color: #60a5fa; }
     .kpi-label { font-size: 11px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-    .kpi-value { font-size: 26px; font-weight: 700; color: #f0f0f0; line-height: 1.2; }
+    .kpi-value { font-size: 24px; font-weight: 700; color: #f0f0f0; line-height: 1.2; }
     .kpi-sub   { font-size: 11px; color: #666; margin-top: 4px; }
 
-    /* ── Sub-tabs ── */
-    .sub-tabs {
-      display: flex; gap: 4px; background: #111;
-      border: 1px solid #1e1e1e; border-radius: 12px;
-      padding: 5px; margin-bottom: 22px; flex-wrap: wrap;
-    }
-    .sub-tab {
-      flex: 1; text-align: center; padding: 8px 16px;
-      border-radius: 8px; background: transparent;
-      color: #666; border: none; cursor: pointer;
-      font-size: 13px; font-weight: 600; transition: all .2s; white-space: nowrap;
-    }
+    .sub-tabs { display: flex; gap: 4px; background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 5px; margin-bottom: 22px; flex-wrap: wrap; }
+    .sub-tab { flex: 1; text-align: center; padding: 8px 16px; border-radius: 8px; background: transparent; color: #666; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; white-space: nowrap; }
     .sub-tab:hover { color: #f0f0f0; }
     .sub-tab.active { background: #e8c547; color: #0a0a0a; }
 
-    /* ── Panels ── */
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── Tables ── */
-    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #1e1e1e; }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #1e1e1e; margin-bottom: 18px; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     thead tr { border-bottom: 1px solid #1e1e1e; }
-    th {
-      padding: 10px 12px; text-align: left;
-      font-size: 11px; font-weight: 600; color: #666;
-      text-transform: uppercase; letter-spacing: .04em;
-      background: #111; white-space: nowrap;
-    }
+    th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .04em; background: #111; white-space: nowrap; }
     td { padding: 10px 12px; border-bottom: 1px solid #111; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,.025); }
+    tr.group-row td { background: #141414; font-weight: 700; color: #e8c547; text-transform: uppercase; font-size: 11px; letter-spacing: .05em; }
 
-    /* ── Flag badges ── */
     .flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; white-space: nowrap; }
     .flag-now  { background: rgba(248,113,113,.15); color: #f87171; }
     .flag-soon { background: rgba(251,146,60,.15);  color: #fb923c; }
     .flag-ok   { background: rgba(74,222,128,.15);  color: #4ade80; }
     .flag-none { background: rgba(102,102,102,.15); color: #666; }
+    .drift { font-size: 11px; color: #fb923c; }
 
-    /* ── Category pill ── */
-    .pill {
-      display: inline-block; font-size: 11px; font-weight: 600;
-      padding: 2px 8px; border-radius: 10px; white-space: nowrap;
-      background: rgba(232,197,71,.1); color: #e8c547;
-    }
-    .pill.Cleaning      { background: rgba(96,165,250,.1); color: #60a5fa; }
-    .pill.Bathing       { background: rgba(167,139,250,.1); color: #a78bfa; }
-    .pill.Gym           { background: rgba(74,222,128,.1); color: #4ade80; }
-    .pill.Cafe          { background: rgba(232,197,71,.1); color: #e8c547; }
+    .note-line { font-size: 12px; color: #666; margin: 4px 2px 16px; }
+    .loading { text-align: center; color: #666; padding: 40px; font-size: 13px; }
+    .banner { background: rgba(96,165,250,.08); border: 1px solid rgba(96,165,250,.25); color: #9ec5fe; border-radius: 10px; padding: 12px 16px; font-size: 12.5px; margin-bottom: 18px; }
 
-    /* ── Upload zone ── */
-    .upload-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; }
-    .upload-zone {
-      flex: 1; min-width: 220px; border: 2px dashed #2a2a2a; border-radius: 10px;
-      padding: 16px 20px; text-align: center; cursor: pointer;
-      font-size: 13px; color: #666; transition: all .2s;
-    }
-    .upload-zone:hover, .upload-zone.drag-over { border-color: #e8c547; color: #e8c547; }
-
-    /* ── Review area ── */
-    #reviewArea { display: none; margin-bottom: 16px; }
-    .review-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
-    }
-    .review-header h3 { font-size: 14px; font-weight: 700; }
-
-    /* ── Manual form ── */
-    .manual-form {
-      display: none; background: #111; border: 1px solid #1e1e1e;
-      border-radius: 10px; padding: 16px; margin-bottom: 16px;
-    }
-    .form-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px; margin-bottom: 12px;
-    }
+    .manual-form { display: none; background: #111; border: 1px solid #1e1e1e; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
     .form-group label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; }
-    .form-group input,
-    .form-group select {
-      width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a;
-      border-radius: 6px; color: #f0f0f0; padding: 7px 10px; font-size: 13px;
-    }
-    .form-group input:focus,
-    .form-group select:focus { outline: none; border-color: #e8c547; }
+    .form-group input, .form-group select { width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; color: #f0f0f0; padding: 7px 10px; font-size: 13px; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #e8c547; }
     .form-actions { display: flex; gap: 8px; align-items: center; }
     .status-msg { font-size: 12px; margin-left: 8px; }
-
-    /* ── Stock take subpage ── */
-    .stock-take-page { display: none; }
-    .stock-take-page.active { display: block; }
-    .stock-main { }
-    .stock-take-page .take-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
-    }
-    .stock-take-page .take-header h3 { font-size: 15px; font-weight: 700; }
-    .date-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .date-row label { font-size: 12px; color: #666; }
-    .date-row input {
-      background: #1a1a1a; border: 1px solid #2a2a2a;
-      border-radius: 6px; color: #f0f0f0; padding: 6px 10px; font-size: 13px;
-    }
-    .qty-input {
-      width: 80px; background: #1a1a1a; border: 1px solid #2a2a2a;
-      border-radius: 6px; color: #f0f0f0; padding: 4px 8px; font-size: 13px; text-align: right;
-    }
-    .qty-input:focus { outline: none; border-color: #e8c547; }
-    .notes-input {
-      width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a;
-      border-radius: 4px; color: #f0f0f0; padding: 3px 6px; font-size: 12px;
-    }
-    .notes-input:focus { outline: none; border-color: #e8c547; }
-
-    /* ── Section gap ── */
-    .top-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-
-    /* ── Spinner ── */
-    .loading { text-align: center; color: #666; padding: 40px; font-size: 13px; }
-
-    @media (max-width: 600px) {
-      .container { padding: 16px; }
-      .kpi-value { font-size: 20px; }
-    }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .shop-total { text-align: right; font-weight: 700; }
+    @media (max-width: 600px) { .container { padding: 16px; } .kpi-value { font-size: 20px; } }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <div class="header-title">
       <h1><span class="accent">ONE LDN</span> / Consumables</h1>
-      <div class="subtitle">Stock levels · Delivery log · Order prediction</div>
+      <div class="subtitle">Par-based ordering · Weekly stock counts · Delivery-corrected predictions</div>
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary btn-sm" onclick="refresh()">Refresh</button>
     </div>
   </div>
 
-  <!-- KPI Row -->
   <div class="kpi-row">
     <div class="kpi-card gold">
       <div class="kpi-label">Spend — MTD</div>
@@ -209,850 +101,465 @@
       <div class="kpi-sub" id="kpiSpendSub">All-time: —</div>
     </div>
     <div class="kpi-card red">
-      <div class="kpi-label">Critical Reorders</div>
-      <div class="kpi-value" id="kpiCritical">—</div>
-      <div class="kpi-sub" id="kpiCriticalSub">Products below threshold</div>
+      <div class="kpi-label">Due to Order</div>
+      <div class="kpi-value" id="kpiDue">—</div>
+      <div class="kpi-sub" id="kpiDueSub">Items at or below par</div>
     </div>
     <div class="kpi-card amber">
-      <div class="kpi-label">Last Stock Take</div>
-      <div class="kpi-value" id="kpiLastTake" style="font-size:18px;padding-top:6px;">—</div>
-      <div class="kpi-sub" id="kpiLastTakeSub">No stock take recorded</div>
+      <div class="kpi-label">Last Stock Count</div>
+      <div class="kpi-value" id="kpiLastCount" style="font-size:18px;padding-top:6px;">—</div>
+      <div class="kpi-sub" id="kpiLastCountSub">From the Stock Take sheet</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Last Order Logged</div>
+      <div class="kpi-value" id="kpiLastOrder" style="font-size:18px;padding-top:6px;">—</div>
+      <div class="kpi-sub" id="kpiLastOrderSub">&nbsp;</div>
     </div>
   </div>
 
-  <!-- Sub-tabs -->
   <div class="sub-tabs">
-    <button class="sub-tab active" onclick="showTab('stock')">Stock Levels</button>
-    <button class="sub-tab"        onclick="showTab('delivery')">Delivery Log</button>
-    <button class="sub-tab"        onclick="showTab('predict')">Order Prediction</button>
+    <button class="sub-tab active" onclick="showTab('predict')">Order Prediction</button>
+    <button class="sub-tab"        onclick="showTab('stock')">Stock Levels</button>
+    <button class="sub-tab"        onclick="showTab('orders')">Order Log</button>
   </div>
 
-  <!-- ═══ STOCK LEVELS PANEL ═══ -->
-  <div class="panel active" id="panelStock">
-    <!-- Stock take subpage -->
-    <div class="stock-take-page" id="takePage">
-      <div class="take-header">
-        <h3>Log Stock Take</h3>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" onclick="submitStockTake()">Submit</button>
-          <button class="btn btn-secondary btn-sm" onclick="closeStockTake()">Cancel</button>
-        </div>
-      </div>
-      <div class="date-row">
-        <label>Date</label>
-        <input type="date" id="takeDate">
-      </div>
-      <div id="takeStatus" style="font-size:12px;margin-bottom:10px;"></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Product</th><th>Category</th>
-            <th style="text-align:right;">Est. Stock</th>
-            <th style="text-align:right;">Actual Count</th>
-            <th>Notes</th>
-          </tr></thead>
-          <tbody id="takeTbody"></tbody>
-        </table>
-      </div>
+  <!-- ═══ ORDER PREDICTION ═══ -->
+  <div class="panel active" id="panelPredict">
+    <div class="banner" id="shoppingListWrap">
+      <strong>Shopping list</strong> — items at or below par, grouped by supplier.
+      <div id="shoppingList" style="margin-top:8px;">—</div>
     </div>
-
-    <!-- Main stock view -->
-    <div class="stock-main" id="stockMain">
-      <div class="top-bar">
-        <button class="btn btn-secondary btn-sm" onclick="openStockTake()">Log Stock Take</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Product</th><th>Category</th>
-            <th style="text-align:right;">Est. Stock</th>
-            <th style="text-align:right;">Min Stock</th>
-            <th style="text-align:right;">Covers</th>
-            <th style="text-align:right;">Velocity/wk</th>
-            <th style="text-align:center;">Status</th>
-          </tr></thead>
-          <tbody id="stockTbody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ DELIVERY LOG PANEL ═══ -->
-  <div class="panel" id="panelDelivery">
-    <!-- Upload + manual entry toggle -->
-    <div class="upload-row">
-      <div class="upload-zone" id="uploadZone"
-           onclick="document.getElementById('fileInput').click()"
-           ondragover="event.preventDefault();this.classList.add('drag-over')"
-           ondragleave="this.classList.remove('drag-over')"
-           ondrop="handleDrop(event)">
-        Drop Enviropack PDF or Amazon CSV here — or click to browse
-        <input type="file" id="fileInput" accept=".pdf,.csv" multiple style="display:none" onchange="handleFiles(this.files)">
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="toggleManual()">+ Manual Entry</button>
-    </div>
-
-    <!-- PDF/CSV review area -->
-    <div id="reviewArea">
-      <div class="review-header">
-        <h3 id="reviewTitle">Review items</h3>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-sm" onclick="confirmDeliveries()">Confirm &amp; Log</button>
-          <button class="btn btn-secondary btn-sm" onclick="cancelReview()">Cancel</button>
-        </div>
-      </div>
-      <div class="table-wrap" style="margin-bottom:10px;">
-        <table>
-          <thead><tr>
-            <th>Product</th><th>Category</th><th>Supplier</th>
-            <th style="text-align:right;">Qty</th>
-            <th style="text-align:right;">Unit Cost</th>
-            <th style="text-align:right;">Total</th>
-          </tr></thead>
-          <tbody id="reviewTbody"></tbody>
-        </table>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <label style="font-size:12px;color:#666;">Delivery date</label>
-        <input type="date" id="reviewDate" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;color:#f0f0f0;padding:6px 10px;font-size:13px;">
-        <div id="reviewStatus" style="font-size:12px;"></div>
-      </div>
-    </div>
-
-    <!-- Manual entry form -->
-    <div class="manual-form" id="manualForm">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Date</label>
-          <input type="date" id="fDate">
-        </div>
-        <div class="form-group">
-          <label>Product</label>
-          <select id="fProduct"></select>
-        </div>
-        <div class="form-group">
-          <label>Qty (cases)</label>
-          <input type="number" id="fQty" min="1" step="1">
-        </div>
-        <div class="form-group">
-          <label>Unit Cost (£)</label>
-          <input type="number" id="fCost" min="0" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>Supplier</label>
-          <input type="text" id="fSupplier" placeholder="e.g. Enviropack">
-        </div>
-        <div class="form-group">
-          <label>Notes / Ref</label>
-          <input type="text" id="fNotes">
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary btn-sm" onclick="submitDelivery()">Log Delivery</button>
-        <button class="btn btn-secondary btn-sm" onclick="toggleManual()">Cancel</button>
-        <span class="status-msg" id="manualStatus"></span>
-      </div>
-    </div>
-
-    <!-- Delivery history -->
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Date</th><th>Product</th><th>Category</th><th>Supplier</th>
-          <th style="text-align:right;">Qty</th>
-          <th style="text-align:right;">Cost/unit</th>
-          <th style="text-align:right;">Total</th>
-          <th>Notes</th>
-          <th></th>
-        </tr></thead>
-        <tbody id="deliveryTbody"><tr><td colspan="9" class="loading">Loading…</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ═══ ORDER PREDICTION PANEL ═══ -->
-  <div class="panel" id="panelPredict">
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Product</th><th>Category</th>
-          <th style="text-align:right;">Est. Stock</th>
-          <th style="text-align:right;">Min Stock</th>
-          <th style="text-align:right;">Covers</th>
-          <th style="text-align:right;">Velocity/wk</th>
+          <th>Product</th><th>Supplier</th>
+          <th style="text-align:right;">Est. Stock (packs)</th>
+          <th style="text-align:right;">Par/mo</th>
+          <th style="text-align:right;">Cover</th>
           <th style="text-align:right;">Suggested Order</th>
+          <th style="text-align:right;">Est. Cost</th>
           <th style="text-align:center;">Status</th>
         </tr></thead>
         <tbody id="predictTbody"><tr><td colspan="8" class="loading">Loading…</td></tr></tbody>
       </table>
     </div>
-    <p style="font-size:12px;color:#666;margin-top:12px;">
-      Velocity = avg units/week over last 8 weeks of usage logs. Suggested order = enough to cover 4 weeks at current velocity. Est. stock = last stock take + deliveries since − usage since.
+    <p class="note-line">
+      Est. stock = last count + orders since − usage since (usage = measured from consecutive counts where available, otherwise the monthly par).
+      "Cover" is days of stock left. An item flags <strong>Order now</strong> when it falls below par cover / min stock, or — with no count yet — when ~a month has passed since the last order. Suggested order tops back up to one month of par.
     </p>
+  </div>
+
+  <!-- ═══ STOCK LEVELS ═══ -->
+  <div class="panel" id="panelStock">
+    <div class="banner">
+      Counts are entered in the <strong>Consumables Stock Take Google Sheet</strong> and appear here automatically. This view is read-only.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Product</th><th>Location</th>
+          <th style="text-align:right;">Last Count (packs)</th>
+          <th>Counted On</th>
+          <th style="text-align:right;">Est. Now</th>
+          <th style="text-align:right;">Par/mo</th>
+          <th>Usage check</th>
+        </tr></thead>
+        <tbody id="stockTbody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ ORDER LOG ═══ -->
+  <div class="panel" id="panelOrders">
+    <div class="top-bar">
+      <div style="font-size:12px;color:#666;">Orders are normally logged in the Google Sheet. Use quick-add below for one-offs.</div>
+      <button class="btn btn-secondary btn-sm" onclick="toggleManual()">+ Quick add order</button>
+    </div>
+    <div class="manual-form" id="manualForm">
+      <div class="form-grid">
+        <div class="form-group"><label>Date</label><input type="date" id="fDate"></div>
+        <div class="form-group"><label>Product</label><select id="fProduct"></select></div>
+        <div class="form-group"><label>Packs</label><input type="number" id="fQty" min="1" step="1"></div>
+        <div class="form-group"><label>Unit Cost £ (optional)</label><input type="number" id="fCost" min="0" step="0.01"></div>
+        <div class="form-group"><label>Supplier (optional)</label><input type="text" id="fSupplier"></div>
+        <div class="form-group"><label>Notes (optional)</label><input type="text" id="fNotes"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-sm" onclick="submitOrder()">Log order</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleManual()">Cancel</button>
+        <span class="status-msg" id="manualStatus"></span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Product</th><th>Supplier</th>
+          <th style="text-align:right;">Packs</th>
+          <th style="text-align:right;">Unit Cost</th>
+          <th style="text-align:right;">Total</th>
+          <th>Notes</th><th></th>
+        </tr></thead>
+        <tbody id="ordersTbody"><tr><td colspan="8" class="loading">Loading…</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
 </div><!-- /container -->
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
-// SUPABASE
+// SUPABASE (read + light quick-add; counts/products come from the Sheet)
 // ═══════════════════════════════════════════════════════════════════════════
-
 const SUPABASE_URL  = 'https://ljjwssicvvyyueyznmou.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxqandzc2ljdnZ5eXVleXpubW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTQ4NzgsImV4cCI6MjA5MTIzMDg3OH0.SAlIZNi5Ex4U4kAs7v1-omAjigRFRYSlXBpSdCI0DqM';
-const SB_HEADERS = {
-  'apikey':        SUPABASE_ANON,
-  'Authorization': `Bearer ${SUPABASE_ANON}`,
-  'Content-Type':  'application/json',
-};
+const SB_HEADERS = { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': 'application/json' };
 
 async function sbGet(table, params = '') {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
-  });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, { headers: SB_HEADERS });
   if (!res.ok) throw new Error(`DB read failed (${table}): ${res.status}`);
   return res.json();
 }
-
 async function sbInsert(table, row) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method:  'POST',
-    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
-    body:    JSON.stringify(row),
+    method: 'POST', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' }, body: JSON.stringify(row),
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`DB insert failed (${table}): ${err}`);
-  }
+  if (!res.ok) throw new Error(`DB insert failed (${table}): ${await res.text()}`);
 }
-
 async function sbDelete(table, id) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
-    method:  'DELETE',
-    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+    method: 'DELETE', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
   });
   if (!res.ok) throw new Error(`DB delete failed (${table}): ${res.status}`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTS
+// MODEL CONSTANTS  (hybrid: monthly par baseline + count correction)
 // ═══════════════════════════════════════════════════════════════════════════
-
-const CONSUMABLE_PRODUCTS = [
-  { name: 'Bin Bags 80L',               sub: 'Cleaning'      },
-  { name: 'Jumbo Toilet Rolls',          sub: 'Cleaning'      },
-  { name: 'Clinell Disinfectant Wipes',  sub: 'Cleaning'      },
-  { name: 'Microfibre Cloths',           sub: 'Cleaning'      },
-  { name: 'Nitrile Gloves',              sub: 'Cleaning'      },
-  { name: 'Toilet Brushes',             sub: 'Cleaning'      },
-  { name: 'Kleenex Tissues',            sub: 'Cleaning'      },
-  { name: 'Flo Period Pads',            sub: 'Bathing'       },
-  { name: 'Flo Tampons',               sub: 'Bathing'       },
-  { name: 'Sure Men Deodorant',          sub: 'Bathing'       },
-  { name: 'Sure Women Deodorant',        sub: 'Bathing'       },
-  { name: 'Bubble Tea Straws',          sub: 'Gym Supplies'  },
-  { name: 'Plastic Food Bags',          sub: 'Gym Supplies'  },
-  { name: 'Magnesium Chalk',            sub: 'Gym Supplies'  },
-  { name: 'WINALOT Dog Treats',         sub: 'Gym Supplies'  },
-  { name: 'Enviropack 6oz Cups',        sub: 'Cafe Supplies' },
-  { name: 'Enviropack 8oz Cups',        sub: 'Cafe Supplies' },
-  { name: 'Enviropack 12oz Cups',       sub: 'Cafe Supplies' },
-  { name: 'Enviropack Lids',            sub: 'Cafe Supplies' },
-  { name: 'Enviropack 16oz Cups',       sub: 'Cafe Supplies' },
-  { name: 'Enviropack 20oz Cups',       sub: 'Cafe Supplies' },
-  { name: 'Wooden Coffee Stirrers',     sub: 'Cafe Supplies' },
-];
-
-const CONS_NAMES = new Set(CONSUMABLE_PRODUCTS.map(p => p.name));
-const CONS_SUB   = Object.fromEntries(CONSUMABLE_PRODUCTS.map(p => [p.name, p.sub]));
-
-const ENVIROPACK_SKUS = {
-  'E11060': 'Enviropack 6oz Cups',
-  'E11080': 'Enviropack 8oz Cups',
-  'E11120': 'Enviropack 12oz Cups',
-  'E17314': 'Enviropack Lids',
-  'E20080': 'Enviropack 16oz Cups',
-  'E20120': 'Enviropack 20oz Cups',
-};
-
-const AMAZON_CONSUMABLE_ASINS = {
-  'B00QHKPBNI': 'Bin Bags 80L',
-  'B0FMJXZ8DL': 'Jumbo Toilet Rolls',
-  'B00FU8YU2Q': 'Clinell Disinfectant Wipes',
-  'B07HRCDDL1': 'Microfibre Cloths',
-  'B00D8Z8L3C': 'Nitrile Gloves',
-  'B0CQRV25FY': 'Toilet Brushes',
-  'B098TXJPWK': 'Kleenex Tissues',
-  'B0BRNSQF47': 'Flo Period Pads',
-  'B0D7151XB2': 'Flo Tampons',
-  'B003WL63LO': 'Sure Men Deodorant',
-  'B08M2XKRLN': 'Sure Women Deodorant',
-  'B09KYB5L68': 'Bubble Tea Straws',
-  'B0C5D6T8FP': 'Plastic Food Bags',
-  'B079Q4BHSV': 'Magnesium Chalk',
-  'B00VV90TN2': 'WINALOT Dog Treats',
-  'B07DM8Z7VT': 'Wooden Coffee Stirrers',
-};
+const CYCLE_DAYS = 30;   // consumables are ordered ~monthly
+const LEAD_DAYS  = 7;    // buffer/lead before running out → "order now" window
+const DRIFT_RATIO = 1.5; // measured usage vs par beyond this → flag a drift note
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════════════════
-
-let productLookup  = {};  // product_name_raw → { min_stock_units, ... }
-let consDeliveries = [];  // shop_consumable_deliveries rows
-let consUsage      = [];  // shop_consumable_usage rows
-let consStockTakes = [];  // shop_stock_takes rows
-let pendingItems   = [];  // items staged in review area before confirm
+let products = [];   // shop_product_lookup (category=Consumables, active)
+let takes    = [];   // shop_stock_takes (our products only)
+let orders   = [];   // shop_consumable_deliveries
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA LOADING
 // ═══════════════════════════════════════════════════════════════════════════
-
-async function loadProductLookup() {
-  try {
-    const rows = await sbGet('shop_product_lookup', 'select=product_name_raw,min_stock_units&order=product_name_raw');
-    productLookup = {};
-    (rows || []).forEach(r => { productLookup[r.product_name_raw] = r; });
-  } catch(e) {
-    console.warn('Could not load product lookup:', e);
-  }
-}
-
-async function loadData() {
-  const [dlv, usage, takes] = await Promise.all([
+async function loadAll() {
+  const [prod, tk, ord] = await Promise.all([
+    sbGet('shop_product_lookup',
+      'select=product_name_raw,display_name,subcategory,supplier,order_url,cost_price,pack_size,monthly_par_packs,min_stock_units' +
+      '&category=eq.Consumables&active=eq.true&order=subcategory,display_name'),
+    sbGet('shop_stock_takes', 'select=product_name_raw,take_date,actual_count,notes,source&order=take_date.desc'),
     sbGet('shop_consumable_deliveries', 'select=*&order=delivery_date.desc'),
-    sbGet('shop_consumable_usage',      'select=*&order=usage_date.desc'),
-    sbGet('shop_stock_takes',           'select=*&order=take_date.desc'),
   ]);
-  consDeliveries = dlv  || [];
-  consUsage      = usage || [];
-  consStockTakes = takes || [];
+  products = prod || [];
+  const keys = new Set(products.map(p => p.product_name_raw));
+  takes  = (tk  || []).filter(t => keys.has(t.product_name_raw));
+  orders = (ord || []).filter(o => keys.has(o.product_name_raw));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STOCK CALCULATIONS
+// HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const num = v => (v === null || v === undefined || v === '' || isNaN(v)) ? null : Number(v);
+const gbp = v => v === null ? '—' : '£' + Number(v).toFixed(2);
 
-function calcEstStock(name) {
-  const takes = consStockTakes
-    .filter(t => t.product_name_raw === name)
-    .sort((a, b) => b.take_date.localeCompare(a.take_date));
-  const lastTake = takes[0];
+function takesFor(key) {
+  return takes.filter(t => t.product_name_raw === key)
+              .sort((a, b) => b.take_date.localeCompare(a.take_date));
+}
+function ordersFor(key) {
+  return orders.filter(o => o.product_name_raw === key);
+}
 
+// ═══════════════════════════════════════════════════════════════════════════
+// HYBRID ENGINE — one product → metrics
+// ═══════════════════════════════════════════════════════════════════════════
+function computeItem(p) {
+  const key = p.product_name_raw;
+  const par = num(p.monthly_par_packs);              // packs / month
+  const parWeekly = par !== null ? par * 12 / 52 : null;
+  const myTakes = takesFor(key);
+  const myOrders = ordersFor(key);
+  const lastTake = myTakes[0] || null;
+  const today = todayStr();
+
+  // Measured weekly usage from the two most recent counts (par correction).
+  let measuredWeekly = null, measuredMonthly = null;
+  if (myTakes.length >= 2) {
+    const newer = myTakes[0], older = myTakes[1];
+    const ordersBetween = myOrders
+      .filter(o => o.delivery_date > older.take_date && o.delivery_date <= newer.take_date)
+      .reduce((s, o) => s + (num(o.qty_cases) || 0), 0);
+    const usage = Number(older.actual_count) + ordersBetween - Number(newer.actual_count);
+    const days = daysBetween(older.take_date, newer.take_date);
+    if (days > 0 && usage >= 0) {
+      measuredWeekly = usage / days * 7;
+      measuredMonthly = measuredWeekly * 52 / 12;
+    }
+  }
+  const weeklyUsage = measuredWeekly !== null ? measuredWeekly : parWeekly;
+
+  // Estimated on-hand now (packs).
+  let estPacks = null;
   if (lastTake) {
-    const dlvSince = consDeliveries
-      .filter(d => d.product_name_raw === name && d.delivery_date >= lastTake.take_date)
-      .reduce((s, d) => s + (d.qty_cases || 0), 0);
-    const usageSince = consUsage
-      .filter(u => u.product_name_raw === name && u.usage_date >= lastTake.take_date)
-      .reduce((s, u) => s + (u.quantity_used || 0), 0);
-    return lastTake.actual_count + dlvSince - usageSince;
+    const ordersSince = myOrders
+      .filter(o => o.delivery_date > lastTake.take_date && o.delivery_date <= today)
+      .reduce((s, o) => s + (num(o.qty_cases) || 0), 0);
+    const daysSince = Math.max(0, daysBetween(lastTake.take_date, today));
+    const used = weeklyUsage !== null ? (weeklyUsage / 7) * daysSince : 0;
+    estPacks = Math.max(0, Number(lastTake.actual_count) + ordersSince - used);
   }
 
-  const totalDlv = consDeliveries
-    .filter(d => d.product_name_raw === name)
-    .reduce((s, d) => s + (d.qty_cases || 0), 0);
-  const totalUsage = consUsage
-    .filter(u => u.product_name_raw === name)
-    .reduce((s, u) => s + (u.quantity_used || 0), 0);
-  return totalDlv > 0 ? totalDlv - totalUsage : null;
+  // Last order + cadence.
+  const lastOrderDate = myOrders.length
+    ? myOrders.map(o => o.delivery_date).sort().slice(-1)[0] : null;
+  const daysSinceOrder = lastOrderDate ? daysBetween(lastOrderDate, today) : null;
+
+  // Cover (days of stock left).
+  const coverDays = (estPacks !== null && weeklyUsage) ? estPacks / (weeklyUsage / 7) : null;
+  const minPacks = num(p.min_stock_units);
+
+  // Flag.
+  let flag;
+  if (par === null || par === 0) {
+    flag = 'none';
+  } else if (estPacks !== null) {
+    if (minPacks !== null && estPacks < minPacks) flag = 'now';
+    else if (coverDays !== null && coverDays < LEAD_DAYS) flag = 'now';
+    else if (coverDays !== null && coverDays < LEAD_DAYS * 2) flag = 'soon';
+    else flag = 'ok';
+  } else if (daysSinceOrder !== null) {          // no count → cadence fallback
+    if (daysSinceOrder >= CYCLE_DAYS) flag = 'now';
+    else if (daysSinceOrder >= CYCLE_DAYS - LEAD_DAYS) flag = 'soon';
+    else flag = 'ok';
+  } else {
+    flag = 'none';                                // no count, never ordered
+  }
+
+  // Suggested order (packs) → top up to one month of par.
+  let suggested = null;
+  if (par !== null && par > 0) {
+    suggested = estPacks !== null ? Math.max(0, Math.ceil(par - estPacks)) : Math.ceil(par);
+  }
+  const cost = num(p.cost_price);
+  const estCost = (suggested !== null && cost !== null) ? suggested * cost : null;
+
+  // Drift note (measured vs par).
+  let drift = null;
+  if (measuredMonthly !== null && par) {
+    if (measuredMonthly > par * DRIFT_RATIO) drift = `using ~${measuredMonthly.toFixed(1)}/mo vs par ${par}`;
+    else if (measuredMonthly < par / DRIFT_RATIO) drift = `using ~${measuredMonthly.toFixed(1)}/mo vs par ${par}`;
+  }
+
+  return { p, par, estPacks, coverDays, lastTake, lastOrderDate, daysSinceOrder,
+           flag, suggested, estCost, measuredMonthly, drift };
 }
 
-function calcVelocity(name, weeks = 8) {
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - weeks * 7);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  const total = consUsage
-    .filter(u => u.product_name_raw === name && u.usage_date >= cutoffStr)
-    .reduce((s, u) => s + (u.quantity_used || 0), 0);
-  return total / weeks;
-}
-
-function getFlag(name) {
-  const est = calcEstStock(name);
-  const vel = calcVelocity(name);
-  const min = productLookup[name]?.min_stock_units ?? null;
-  if (est === null && vel === 0) return 'none';
-  if (min !== null && est !== null && est < min) return 'now';
-  const covers = vel > 0 && est !== null ? (est / vel) * 7 : null;
-  if (covers !== null && covers < 7)  return 'now';
-  if (covers !== null && covers < 14) return 'soon';
-  return 'ok';
+function computeAll() {
+  const m = {};
+  products.forEach(p => { m[p.product_name_raw] = computeItem(p); });
+  return m;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════════════════════════════
-
 function flagBadge(f) {
-  const map = { now: ['flag-now','Order now'], soon: ['flag-soon','Order soon'], ok: ['flag-ok','OK'], none: ['flag-none','No data'] };
+  const map = { now: ['flag-now', 'Order now'], soon: ['flag-soon', 'Order soon'], ok: ['flag-ok', 'OK'], none: ['flag-none', 'No data'] };
   const [cls, label] = map[f] || map.none;
   return `<span class="flag ${cls}">${label}</span>`;
 }
+const coverTxt = d => d === null ? '—' : (d >= 999 ? '999d+' : Math.round(d) + 'd');
 
-function catPill(sub) {
-  const key = sub === 'Gym Supplies' ? 'Gym' : sub === 'Cafe Supplies' ? 'Cafe' : sub;
-  return `<span class="pill ${key}">${sub}</span>`;
-}
-
-function renderKPIs() {
+function renderKPIs(metrics) {
   const now = new Date();
-  const mtdStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-  const mtdSpend = consDeliveries
-    .filter(d => d.delivery_date >= mtdStart)
-    .reduce((s, d) => s + (d.total || 0), 0);
-  const allSpend = consDeliveries.reduce((s, d) => s + (d.total || 0), 0);
+  const mtdStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const mtd = orders.filter(o => o.delivery_date >= mtdStart).reduce((s, o) => s + (num(o.total) || 0), 0);
+  const all = orders.reduce((s, o) => s + (num(o.total) || 0), 0);
+  document.getElementById('kpiSpend').textContent = gbp(mtd);
+  document.getElementById('kpiSpendSub').textContent = `All-time: ${gbp(all)}`;
 
-  document.getElementById('kpiSpend').textContent    = `£${mtdSpend.toFixed(2)}`;
-  document.getElementById('kpiSpendSub').textContent = `All-time: £${allSpend.toFixed(2)}`;
-
-  const critical = CONSUMABLE_PRODUCTS.filter(p => getFlag(p.name) === 'now');
-  document.getElementById('kpiCritical').textContent    = critical.length;
-  document.getElementById('kpiCriticalSub').textContent = critical.length
-    ? critical.slice(0,3).map(p => p.name).join(', ')
+  const due = products.filter(p => metrics[p.product_name_raw].flag === 'now');
+  document.getElementById('kpiDue').textContent = due.length;
+  document.getElementById('kpiDueSub').textContent = due.length
+    ? due.slice(0, 3).map(p => p.display_name).join(', ') + (due.length > 3 ? '…' : '')
     : 'All stocked';
 
-  const lastTake = [...consStockTakes].sort((a, b) => b.take_date.localeCompare(a.take_date))[0];
-  const daysSince = lastTake
-    ? Math.floor((Date.now() - new Date(lastTake.take_date)) / 86400000)
-    : null;
-  document.getElementById('kpiLastTake').textContent    = lastTake ? lastTake.take_date : 'Never';
-  document.getElementById('kpiLastTakeSub').textContent = daysSince !== null
-    ? `${daysSince} day${daysSince === 1 ? '' : 's'} ago`
-    : 'No stock take recorded';
+  const lastCount = takes.map(t => t.take_date).sort().slice(-1)[0] || null;
+  document.getElementById('kpiLastCount').textContent = lastCount || 'Never';
+  document.getElementById('kpiLastCountSub').textContent = lastCount
+    ? `${daysBetween(lastCount, todayStr())} days ago` : 'No counts yet';
+
+  const lastOrder = orders.map(o => o.delivery_date).sort().slice(-1)[0] || null;
+  document.getElementById('kpiLastOrder').textContent = lastOrder || 'Never';
 }
 
-function renderStock() {
-  document.getElementById('stockTbody').innerHTML = CONSUMABLE_PRODUCTS.map(p => {
-    const est    = calcEstStock(p.name);
-    const vel    = calcVelocity(p.name);
-    const covers = vel > 0 && est !== null ? Math.round((est / vel) * 7) : null;
-    const min    = productLookup[p.name]?.min_stock_units ?? null;
-    const flag   = getFlag(p.name);
-    return `<tr>
-      <td style="font-weight:600;">${p.name}</td>
-      <td>${catPill(p.sub)}</td>
-      <td style="text-align:right;">${est !== null ? est.toFixed(0) : '—'}</td>
-      <td style="text-align:right;">${min !== null ? min : '—'}</td>
-      <td style="text-align:right;">${covers !== null ? covers + 'd' : '—'}</td>
-      <td style="text-align:right;">${vel > 0 ? vel.toFixed(1) : '—'}</td>
-      <td style="text-align:center;">${flagBadge(flag)}</td>
-    </tr>`;
-  }).join('');
+function groupRows(metrics, rowFn) {
+  const groups = {};
+  products.forEach(p => { (groups[p.subcategory || 'Other'] ||= []).push(p); });
+  let html = '';
+  Object.keys(groups).sort().forEach(loc => {
+    html += `<tr class="group-row"><td colspan="9">${loc}</td></tr>`;
+    html += groups[loc].map(p => rowFn(metrics[p.product_name_raw])).join('');
+  });
+  return html;
 }
 
-function renderDeliveries() {
-  const tbody = document.getElementById('deliveryTbody');
-  if (!consDeliveries.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="loading">No deliveries logged yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = consDeliveries.map(d => `<tr>
-    <td>${d.delivery_date}</td>
-    <td style="font-weight:600;">${d.product_name_raw}</td>
-    <td>${catPill(CONS_SUB[d.product_name_raw] || d.subcategory || '—')}</td>
-    <td>${d.supplier || '—'}</td>
-    <td style="text-align:right;">${d.qty_cases}</td>
-    <td style="text-align:right;">${d.unit_cost != null ? '£' + Number(d.unit_cost).toFixed(2) : '—'}</td>
-    <td style="text-align:right;">${d.total != null ? '£' + Number(d.total).toFixed(2) : '—'}</td>
-    <td style="color:#666;font-size:12px;">${d.notes || '—'}</td>
-    <td><button class="btn btn-danger btn-xs" onclick="deleteDelivery('${d.id}')">Delete</button></td>
+function renderPredict(metrics) {
+  document.getElementById('predictTbody').innerHTML = groupRows(metrics, m => `<tr>
+    <td style="font-weight:600;">${m.p.display_name}</td>
+    <td>${m.p.supplier || '—'}</td>
+    <td style="text-align:right;">${m.estPacks !== null ? m.estPacks.toFixed(1) : '—'}</td>
+    <td style="text-align:right;">${m.par !== null ? m.par : '—'}</td>
+    <td style="text-align:right;">${coverTxt(m.coverDays)}</td>
+    <td style="text-align:right;font-weight:600;">${m.suggested ? m.suggested : '—'}</td>
+    <td style="text-align:right;">${gbp(m.estCost)}</td>
+    <td style="text-align:center;">${flagBadge(m.flag)}</td>
+  </tr>`);
+  renderShoppingList(metrics);
+}
+
+function renderShoppingList(metrics) {
+  const due = products.map(p => metrics[p.product_name_raw]).filter(m => m.flag === 'now' && m.suggested);
+  const el = document.getElementById('shoppingList');
+  if (!due.length) { el.innerHTML = '<em>Nothing due — everything is above par.</em>'; return; }
+  const bySup = {};
+  due.forEach(m => { (bySup[m.p.supplier || 'Unspecified'] ||= []).push(m); });
+  let grand = 0;
+  let html = '';
+  Object.keys(bySup).sort().forEach(sup => {
+    const items = bySup[sup];
+    const subtotal = items.reduce((s, m) => s + (m.estCost || 0), 0);
+    grand += subtotal;
+    html += `<div style="margin-top:6px;"><strong style="color:#e8c547;">${sup}</strong> — ${gbp(subtotal)}<br>`;
+    html += items.map(m => {
+      const link = (m.p.order_url && /^https?:\/\//.test(m.p.order_url))
+        ? ` <a class="link" href="${m.p.order_url}" target="_blank" rel="noopener">↗</a>` : '';
+      return `&nbsp;&nbsp;• ${m.p.display_name} × ${m.suggested} pack${m.suggested === 1 ? '' : 's'} (${gbp(m.estCost)})${link}`;
+    }).join('<br>');
+    html += '</div>';
+  });
+  html += `<div class="shop-total" style="margin-top:8px;">Estimated total: ${gbp(grand)}</div>`;
+  el.innerHTML = html;
+}
+
+function renderStock(metrics) {
+  document.getElementById('stockTbody').innerHTML = groupRows(metrics, m => `<tr>
+    <td style="font-weight:600;">${m.p.display_name}</td>
+    <td>${m.p.subcategory || '—'}</td>
+    <td style="text-align:right;">${m.lastTake ? Number(m.lastTake.actual_count) : '—'}</td>
+    <td>${m.lastTake ? m.lastTake.take_date : '—'}</td>
+    <td style="text-align:right;">${m.estPacks !== null ? m.estPacks.toFixed(1) : '—'}</td>
+    <td style="text-align:right;">${m.par !== null ? m.par : '—'}</td>
+    <td>${m.drift ? `<span class="drift">⚠ ${m.drift}</span>` : (m.measuredMonthly !== null ? 'on par' : '—')}</td>
+  </tr>`);
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('ordersTbody');
+  if (!orders.length) { tbody.innerHTML = '<tr><td colspan="8" class="loading">No orders logged yet.</td></tr>'; return; }
+  const name = {};
+  products.forEach(p => { name[p.product_name_raw] = p.display_name; });
+  tbody.innerHTML = orders.map(o => `<tr>
+    <td>${o.delivery_date}</td>
+    <td style="font-weight:600;">${name[o.product_name_raw] || o.product_name_raw}</td>
+    <td>${o.supplier || '—'}</td>
+    <td style="text-align:right;">${o.qty_cases}</td>
+    <td style="text-align:right;">${gbp(num(o.unit_cost))}</td>
+    <td style="text-align:right;">${gbp(num(o.total))}</td>
+    <td style="color:#666;font-size:12px;">${o.notes || '—'}</td>
+    <td><button class="btn btn-danger btn-xs" onclick="deleteOrder('${o.id}')">Delete</button></td>
   </tr>`).join('');
 }
 
-function renderPrediction() {
-  document.getElementById('predictTbody').innerHTML = CONSUMABLE_PRODUCTS.map(p => {
-    const est       = calcEstStock(p.name);
-    const vel       = calcVelocity(p.name);
-    const covers    = vel > 0 && est !== null ? Math.round((est / vel) * 7) : null;
-    const min       = productLookup[p.name]?.min_stock_units ?? null;
-    const flag      = getFlag(p.name);
-    const suggested = vel > 0 ? Math.max(0, Math.ceil(vel * 4 - (est || 0))) : null;
-    return `<tr>
-      <td style="font-weight:600;">${p.name}</td>
-      <td>${catPill(p.sub)}</td>
-      <td style="text-align:right;">${est !== null ? est.toFixed(0) : '—'}</td>
-      <td style="text-align:right;">${min !== null ? min : '—'}</td>
-      <td style="text-align:right;">${covers !== null ? covers + 'd' : '—'}</td>
-      <td style="text-align:right;">${vel > 0 ? vel.toFixed(1) : '—'}</td>
-      <td style="text-align:right;font-weight:600;">${suggested !== null && suggested > 0 ? suggested : '—'}</td>
-      <td style="text-align:center;">${flagBadge(flag)}</td>
-    </tr>`;
-  }).join('');
-}
-
-async function renderAll() {
-  renderKPIs();
-  renderStock();
-  renderDeliveries();
-  renderPrediction();
+function renderAll() {
+  const metrics = computeAll();
+  renderKPIs(metrics);
+  renderPredict(metrics);
+  renderStock(metrics);
+  renderOrders();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TAB SWITCHING
+// TABS
 // ═══════════════════════════════════════════════════════════════════════════
-
 function showTab(name) {
-  const tabs   = { stock: 'panelStock', delivery: 'panelDelivery', predict: 'panelPredict' };
-  const btns   = document.querySelectorAll('.sub-tab');
-  const panels = document.querySelectorAll('.panel');
-  panels.forEach(p => p.classList.remove('active'));
-  document.getElementById(tabs[name]).classList.add('active');
-  const tabNames = Object.keys(tabs);
-  btns.forEach((b, i) => b.classList.toggle('active', tabNames[i] === name));
+  const map = { predict: 'panelPredict', stock: 'panelStock', orders: 'panelOrders' };
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(map[name]).classList.add('active');
+  const order = Object.keys(map);
+  document.querySelectorAll('.sub-tab').forEach((b, i) => b.classList.toggle('active', order[i] === name));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// STOCK TAKE
+// QUICK-ADD ORDER (convenience; Sheet Order Log is the main path)
 // ═══════════════════════════════════════════════════════════════════════════
-
-function openStockTake() {
-  document.getElementById('takePage').classList.add('active');
-  document.getElementById('stockMain').style.display = 'none';
-  document.getElementById('takeDate').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('takeStatus').textContent = '';
-  document.getElementById('takeTbody').innerHTML = CONSUMABLE_PRODUCTS.map(p => {
-    const est = calcEstStock(p.name);
-    return `<tr>
-      <td style="font-weight:600;">${p.name}</td>
-      <td>${catPill(p.sub)}</td>
-      <td style="text-align:right;">${est !== null ? est.toFixed(0) : '—'}</td>
-      <td style="text-align:right;">
-        <input type="number" class="qty-input" min="0" step="1" data-product="${p.name}" placeholder="—">
-      </td>
-      <td>
-        <input type="text" class="notes-input" data-notes="${p.name}" placeholder="Optional">
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function closeStockTake() {
-  document.getElementById('takePage').classList.remove('active');
-  document.getElementById('stockMain').style.display = '';
-}
-
-async function submitStockTake() {
-  const date   = document.getElementById('takeDate').value;
-  const status = document.getElementById('takeStatus');
-  if (!date) { status.textContent = 'Set a date first.'; return; }
-
-  const rows = [];
-  document.querySelectorAll('#takeTbody input.qty-input').forEach(inp => {
-    if (inp.value.trim() === '') return;
-    const notesEl = document.querySelector(`#takeTbody input[data-notes="${inp.dataset.product}"]`);
-    rows.push({
-      take_date:        date,
-      product_name_raw: inp.dataset.product,
-      actual_count:     parseFloat(inp.value),
-      notes:            notesEl?.value || null,
-    });
-  });
-
-  if (!rows.length) { status.textContent = 'Enter at least one count.'; return; }
-  status.style.color = '#666';
-  status.textContent = `Saving ${rows.length} counts…`;
-  try {
-    for (const r of rows) await sbInsert('shop_stock_takes', r);
-    status.style.color = '#4ade80';
-    status.textContent = `Saved ${rows.length} counts.`;
-    setTimeout(async () => { await loadData(); closeStockTake(); renderAll(); }, 900);
-  } catch(e) {
-    status.style.color = '#f87171';
-    status.textContent = `Error: ${e.message}`;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MANUAL DELIVERY ENTRY
-// ═══════════════════════════════════════════════════════════════════════════
-
 function toggleManual() {
   const form = document.getElementById('manualForm');
   const open = form.style.display !== 'block';
   form.style.display = open ? 'block' : 'none';
   if (open) {
     document.getElementById('fProduct').innerHTML =
-      CONSUMABLE_PRODUCTS.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-    document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+      products.map(p => `<option value="${p.product_name_raw}">${p.display_name}</option>`).join('');
+    document.getElementById('fDate').value = todayStr();
     document.getElementById('manualStatus').textContent = '';
   }
 }
 
-async function submitDelivery() {
+async function submitOrder() {
   const status = document.getElementById('manualStatus');
-  const date     = document.getElementById('fDate').value;
-  const product  = document.getElementById('fProduct').value;
-  const qty      = parseFloat(document.getElementById('fQty').value);
-  const cost     = parseFloat(document.getElementById('fCost').value);
+  const date = document.getElementById('fDate').value;
+  const key = document.getElementById('fProduct').value;
+  const qty = parseFloat(document.getElementById('fQty').value);
+  let cost = parseFloat(document.getElementById('fCost').value);
   const supplier = document.getElementById('fSupplier').value.trim();
-  const notes    = document.getElementById('fNotes').value.trim();
-
-  if (!date || !product || isNaN(qty) || qty <= 0) {
-    status.style.color = '#f87171';
-    status.textContent = 'Date, product and qty are required.';
-    return;
+  const notes = document.getElementById('fNotes').value.trim();
+  const p = products.find(x => x.product_name_raw === key);
+  if (!date || !key || isNaN(qty) || qty <= 0) {
+    status.style.color = '#f87171'; status.textContent = 'Date, product and packs are required.'; return;
   }
-  status.style.color = '#666';
-  status.textContent = 'Saving…';
+  if (isNaN(cost)) cost = num(p && p.cost_price);
+  status.style.color = '#666'; status.textContent = 'Saving…';
   try {
     await sbInsert('shop_consumable_deliveries', {
-      delivery_date:    date,
-      product_name_raw: product,
-      subcategory:      CONS_SUB[product] || null,
-      qty_cases:        qty,
-      unit_cost:        isNaN(cost) ? null : cost,
-      total:            isNaN(cost) ? null : cost * qty,
-      supplier:         supplier || null,
-      notes:            notes || null,
+      delivery_date: date, product_name_raw: key, subcategory: p ? p.subcategory : null,
+      qty_cases: qty, pack_size: p ? p.pack_size : null,
+      unit_cost: cost != null ? cost : null, total: cost != null ? cost * qty : null,
+      supplier: supplier || (p ? p.supplier : null) || null, notes: notes || null,
     });
-    status.style.color = '#4ade80';
-    status.textContent = 'Logged.';
-    setTimeout(async () => { await loadData(); toggleManual(); renderAll(); }, 800);
-  } catch(e) {
-    status.style.color = '#f87171';
-    status.textContent = `Error: ${e.message}`;
+    status.style.color = '#4ade80'; status.textContent = 'Logged.';
+    setTimeout(async () => { await loadAll(); toggleManual(); renderAll(); }, 700);
+  } catch (e) {
+    status.style.color = '#f87171'; status.textContent = `Error: ${e.message}`;
   }
 }
 
-async function deleteDelivery(id) {
-  if (!confirm('Delete this delivery?')) return;
+async function deleteOrder(id) {
+  if (!confirm('Delete this order?')) return;
   await sbDelete('shop_consumable_deliveries', id);
-  await loadData();
+  await loadAll();
   renderAll();
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FILE UPLOAD — PDF (Enviropack) + CSV (Amazon)
-// ═══════════════════════════════════════════════════════════════════════════
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('uploadZone').classList.remove('drag-over');
-  handleFiles(e.dataTransfer.files);
-}
-
-async function handleFiles(files) {
-  const allItems = [];
-  let sourceName = '';
-
-  for (const file of Array.from(files)) {
-    const name = file.name.toLowerCase();
-    if (name.endsWith('.pdf')) {
-      const text = await extractPdfText(file);
-      const supplier = autoDetectSupplier(text.split('\n'));
-      if (supplier === 'enviropack') {
-        const items = parseEnviropackInvoice(text.split('\n'));
-        items.forEach(i => allItems.push(i));
-        sourceName = file.name;
-      } else {
-        alert(`${file.name}: not an Enviropack invoice (detected: ${supplier}). Upload Enviropack PDFs only here.`);
-      }
-    } else if (name.endsWith('.csv')) {
-      const text = await file.text();
-      const items = parseAmazonCSV(text);
-      items.forEach(i => allItems.push(i));
-      sourceName = file.name;
-    }
-  }
-
-  if (allItems.length) {
-    pendingItems = allItems;
-    renderReviewTable(allItems, sourceName);
-  } else {
-    alert('No consumable items found in the uploaded file(s).');
-  }
-  document.getElementById('fileInput').value = '';
-}
-
-// ── pdf.js text extraction ─────────────────────────────────────────────────
-
-async function extractPdfText(file) {
-  if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-  const LINE_BUCKET = 2;
-  let text = '';
-
-  for (let pg = 1; pg <= pdf.numPages; pg++) {
-    const page    = await pdf.getPage(pg);
-    const content = await page.getTextContent();
-    const lineMap = new Map();
-    for (const item of content.items) {
-      if (!item.str) continue;
-      const bucket = Math.round(item.transform[5] / LINE_BUCKET) * LINE_BUCKET;
-      if (!lineMap.has(bucket)) lineMap.set(bucket, []);
-      lineMap.get(bucket).push({ x: item.transform[4], str: item.str });
-    }
-    const sorted = [...lineMap.keys()].sort((a, b) => b - a);
-    for (const bucket of sorted) {
-      const line = lineMap.get(bucket).sort((a, b) => a.x - b.x).map(i => i.str).join(' ').trim();
-      if (line) text += line + '\n';
-    }
-    text += '\n';
-  }
-  return text;
-}
-
-// ── Supplier detection ─────────────────────────────────────────────────────
-
-function autoDetectSupplier(lines) {
-  const top = lines.slice(0, 12).join(' ').toLowerCase();
-  if (top.includes('enviropack') || top.includes('envirc')) return 'enviropack';
-  if (top.includes('muscle') || top.includes('finesse'))    return 'muscle-finesse';
-  if (top.includes('tapstitch'))                            return 'tapstitch';
-  return 'generic';
-}
-
-// ── Enviropack invoice parser ──────────────────────────────────────────────
-
-function parseEnviropackInvoice(lines) {
-  const items = [];
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    // Match: SKU  ...description...  qty  unit_price  subtotal
-    const m = line.match(/^(E\d{5})\s+(.+?)\s+(\d+)\s+([\d.]+)\s+([\d.]+)\s*$/);
-    if (!m) continue;
-    const [, sku, desc, qtyStr, priceStr, totalStr] = m;
-    const productName = ENVIROPACK_SKUS[sku];
-    if (!productName) continue;
-
-    const packM    = desc.match(/Qty Per Case:\s*(\d+)/i);
-    const packSize = packM ? parseInt(packM[1]) : 1;
-
-    items.push({
-      product_name_raw: productName,
-      subcategory:      'Cafe Supplies',
-      supplier:         'Enviropack',
-      qty_cases:        parseInt(qtyStr),
-      unit_cost:        parseFloat(priceStr),
-      total:            parseFloat(totalStr),
-      notes:            packSize > 1 ? `Pack size: ${packSize}` : null,
-    });
-  }
-  return items;
-}
-
-// ── Amazon CSV parser (consumables only) ───────────────────────────────────
-
-function parseAmazonCSV(csvText) {
-  const result = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-  const items = [];
-  const seen = new Set();
-
-  for (const row of result.data) {
-    const asin  = (row['ASIN'] || '').trim();
-    const prod  = AMAZON_CONSUMABLE_ASINS[asin];
-    if (!prod) continue;
-
-    const key = asin + '|' + (row['Order Date'] || '');
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    // Convert DD/MM/YYYY → YYYY-MM-DD
-    let dateStr = null;
-    const rawDate = row['Order Date'] || '';
-    const dm = rawDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (dm) dateStr = `${dm[3]}-${dm[2]}-${dm[1]}`;
-
-    const qty   = parseInt(row['Item Quantity'] || '1') || 1;
-    const total = parseFloat((row['Item Net Total'] || '0').replace(/[^0-9.]/g, '')) || 0;
-    const unitCost = qty > 0 ? total / qty : 0;
-
-    items.push({
-      product_name_raw: prod,
-      subcategory:      CONS_SUB[prod] || null,
-      supplier:         'Amazon',
-      qty_cases:        qty,
-      unit_cost:        unitCost,
-      total:            total,
-      _date:            dateStr,
-      notes:            row['Title'] ? row['Title'].slice(0, 80) : null,
-    });
-  }
-  return items;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// REVIEW TABLE
-// ═══════════════════════════════════════════════════════════════════════════
-
-function renderReviewTable(items, sourceName) {
-  document.getElementById('reviewTitle').textContent = `Review — ${sourceName} (${items.length} item${items.length !== 1 ? 's' : ''})`;
-
-  // Set review date from first item's _date if available (Amazon CSV has order dates)
-  const firstDate = items.find(i => i._date)?._date;
-  document.getElementById('reviewDate').value = firstDate || new Date().toISOString().slice(0, 10);
-  document.getElementById('reviewStatus').textContent = '';
-
-  document.getElementById('reviewTbody').innerHTML = items.map((item, i) => `<tr>
-    <td style="font-weight:600;">${item.product_name_raw}</td>
-    <td>${catPill(item.subcategory || '—')}</td>
-    <td>${item.supplier || '—'}</td>
-    <td style="text-align:right;">${item.qty_cases}</td>
-    <td style="text-align:right;">${item.unit_cost != null ? '£' + item.unit_cost.toFixed(2) : '—'}</td>
-    <td style="text-align:right;">${item.total != null ? '£' + item.total.toFixed(2) : '—'}</td>
-  </tr>`).join('');
-
-  document.getElementById('reviewArea').style.display = 'block';
-}
-
-function cancelReview() {
-  pendingItems = [];
-  document.getElementById('reviewArea').style.display = 'none';
-}
-
-async function confirmDeliveries() {
-  const date   = document.getElementById('reviewDate').value;
-  const status = document.getElementById('reviewStatus');
-  if (!date) { status.style.color = '#f87171'; status.textContent = 'Set a date.'; return; }
-
-  status.style.color = '#666';
-  status.textContent = `Saving ${pendingItems.length} items…`;
-  try {
-    for (const item of pendingItems) {
-      await sbInsert('shop_consumable_deliveries', {
-        delivery_date:    item._date || date,
-        product_name_raw: item.product_name_raw,
-        subcategory:      item.subcategory || null,
-        qty_cases:        item.qty_cases,
-        unit_cost:        item.unit_cost ?? null,
-        total:            item.total ?? null,
-        supplier:         item.supplier || null,
-        notes:            item.notes || null,
-      });
-    }
-    status.style.color = '#4ade80';
-    status.textContent = `${pendingItems.length} deliveries logged.`;
-    pendingItems = [];
-    setTimeout(async () => {
-      document.getElementById('reviewArea').style.display = 'none';
-      await loadData();
-      renderAll();
-    }, 900);
-  } catch(e) {
-    status.style.color = '#f87171';
-    status.textContent = `Error: ${e.message}`;
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════════════
-
-async function refresh() {
-  await loadData();
-  renderAll();
-}
-
+async function refresh() { await loadAll(); renderAll(); }
 async function init() {
-  await Promise.all([loadProductLookup(), loadData()]);
-  renderAll();
+  try { await loadAll(); renderAll(); }
+  catch (e) {
+    document.getElementById('predictTbody').innerHTML =
+      `<tr><td colspan="8" class="loading">Error loading data: ${e.message}</td></tr>`;
+  }
 }
-
 init();
 </script>
 </body>
