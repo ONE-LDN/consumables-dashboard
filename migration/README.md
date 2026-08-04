@@ -21,31 +21,32 @@ keyed on short slugs (`toilet_rolls`, `blue_rolls`, …) with a separate friendl
 
 ## The drift, in order of consequence
 
-### 1. The sheet has no monthly par — and that is the field predictions run on
+### 1. No trustworthy usage figure exists anywhere
 
-`monthly_par_packs` is the baseline of the prediction model. Neither sheet column
-supplies it:
+`monthly_par_packs` is the baseline of the prediction model, and nothing in the
+system currently supplies a reliable one.
 
-- `Par Qty` is **target on-hand**, not monthly consumption.
-- `Cadence` is a free-text note in five different formats (`6 pk/pm`, `1 p/m`,
-  bare `1`/`7`, `?`, blank).
+- The sheet has no usage column at all. `Par Qty` is target on-hand, and
+  `Cadence` is free text in five formats (`6 pk/pm`, `1 p/m`, bare `1`/`7`, `?`,
+  blank).
+- The stored pars match the invoice purchase rate to 2 d.p. — but they were
+  *derived* from those purchases, so that's circularity, not validation.
+- **The purchases themselves are unreliable.** The previous operations manager
+  ordered reactively, after running out, so consumption was suppressed during the
+  dry spells. Purchase rate is a **floor** on demand, not a measure of it.
 
-The invoice tab proves the existing DB pars are already correct — they match
-invoice-derived consumption over the 4.83-month window to 2 d.p.:
+A burn check against the 29/07 count suggests the fast movers are understated by
+**40–60%** (toilet roll 7.61 packs/mo vs a 5.59 floor; blue roll 8.46 vs 4.97;
+shampoo 11.42 vs 6.42). Full working in `MINIMUM-STOCK.md`.
 
-| product | packs bought | packs/month (actual) | DB `monthly_par_packs` | sheet `Par Qty` | sheet `Cadence` |
-|---|---|---|---|---|---|
-| toilet_rolls | 27 | **5.59** | 5.5 | 24 rolls (= 4 packs) | 6 pk/pm |
-| blue_rolls | 24 | **4.97** | 5.4 | 30 rolls (= 5 packs) | 6 pk/pm |
-| shampoo (Odyssey) | 31 | **6.42** | 7 | 6 | 7 |
-| conditioner | 3 | **0.62** | 0.6 | 2 | 1 |
-| hand_wash | 4 | **0.83** | 0.8 | 2 | 1 |
-| moisturiser | 3 | **0.62** | 0.6 | 3 | 1 |
-| multipurpose_cleaner | 2 | **0.41** | 0.4 | 2 | (blank) |
+Consequences: minimums are safe because they take the **highest** of four
+candidates and `Par Qty` was already carrying the fast movers. **Order quantities
+were too small** — and undersized orders are the mechanism that perpetuates
+reactive ordering. Those have been raised.
 
-**Do not overwrite `monthly_par_packs` from `Par Qty` or `Cadence`.** Keep the
-existing pars. `Par Qty` turns out to be a minimum-stock figure rather than a
-usage figure, and a well-judged one — see `MINIMUM-STOCK.md`.
+The first few Tuesday counts will be the first trustworthy usage data this system
+has had. Don't overwrite `monthly_par_packs` from `Par Qty` or `Cadence`; let
+measured usage from consecutive counts take over.
 
 ### 2. Product names changed wholesale, so a naive sync wipes the catalogue
 
@@ -143,7 +144,7 @@ roll in rolls. **Decided: count in individual units throughout**, with
 | `products_tab_final.csv` | The canonical 52 products from the `Stock` tab, restructured for `Code.gs`, keys preserved, with `units_per_pack` / `count_unit` / `min_stock_units` / `order_up_to_units` added. |
 | `min_stock_model.csv` | The minimum-stock working for all 52 products: inputs, which candidate set the minimum, order-up-to level, implied cadence, per-row flags. |
 | `MINIMUM-STOCK.md` | How the minimum is worked out, and why. |
-| `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. |
+| `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. Still worth loading — the orders genuinely happened and `orders_between` needs them; it was only the demand inference that was unsafe. |
 
 ## Decisions taken (2026-08-04)
 
