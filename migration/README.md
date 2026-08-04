@@ -44,8 +44,8 @@ invoice-derived consumption over the 4.83-month window to 2 d.p.:
 | multipurpose_cleaner | 2 | **0.41** | 0.4 | 2 | (blank) |
 
 **Do not overwrite `monthly_par_packs` from `Par Qty` or `Cadence`.** Keep the
-existing pars, and add a separate `packs_per_month_par` column to the sheet so it
-stays explicit.
+existing pars. `Par Qty` turns out to be a minimum-stock figure rather than a
+usage figure, and a well-judged one — see `MINIMUM-STOCK.md`.
 
 ### 2. Product names changed wholesale, so a naive sync wipes the catalogue
 
@@ -108,12 +108,11 @@ These are consumption-tracked components of restock boxes, not order units. They
 will produce 14 new products with no price, no par and no count — every one
 flagged "order now" with a £0 suggested order.
 
-### 6. Counting unit conflicts with the schema
+### 6. Counting unit conflicts with the schema — resolved
 
-`shop_stock_takes` stores counts **in packs**. The sheet counts toilet roll and
-blue roll **in rolls** (`6 rolls per pack. counteed in rolls`, count = 27 rolls =
-4.5 packs). Left as-is, the two highest-volume items are out by 6×. Either
-convert on submit or add a `count_unit` column.
+`shop_stock_takes` stores counts in packs; the sheet counts toilet roll and blue
+roll in rolls. **Decided: count in individual units throughout**, with
+`units_per_pack` converting for ordering. See `MINIMUM-STOCK.md`.
 
 ### 7. Smaller items
 
@@ -141,17 +140,33 @@ convert on submit or add a `count_unit` column.
 | File | What it is |
 |---|---|
 | `crosswalk.csv` | Every sheet row mapped to its live Supabase key, with field-level drift, VAT basis, and 9 rows flagged for a decision. 34 matched, 14 new first-aid, 7 other new, 5 dropped. |
-| `products_tab_proposed.csv` | The 55 products restructured into the 8 columns `Code.gs` expects, keys preserved, `_review` column listing what each row still needs. |
+| `products_tab_final.csv` | The canonical 52 products from the `Stock` tab, restructured for `Code.gs`, keys preserved, with `units_per_pack` / `count_unit` / `min_stock_units` / `order_up_to_units` added. |
+| `min_stock_model.csv` | The minimum-stock working for all 52 products: inputs, which candidate set the minimum, order-up-to level, implied cadence, per-row flags. |
+| `MINIMUM-STOCK.md` | How the minimum is worked out, and why. |
 | `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. |
+
+## Decisions taken (2026-08-04)
+
+- **Counting is in individual units, not packs.** `units_per_pack` becomes
+  required for ordering. Consequences in `MINIMUM-STOCK.md`.
+- **The `Stock` tab is the canonical product list** — 52 products. The 3
+  stationery rows that exist only on `Product List (Updated)` (`Highlighers`,
+  `White board marker`, `Permamnent marker`) are dropped.
+- **The `Stock` tab's categories are canonical**, so `Greenspeed Techno Multi` is
+  `Staff Room`, not `Cleaning`.
+- **Minimum stock is derived and `Cadence` is retired.** Weekly Tuesday counts
+  make order cadence an output rather than an input — method in
+  `MINIMUM-STOCK.md`.
 
 ## Suggested sequence
 
 1. Agree the 9 flagged rows in `crosswalk.csv`.
-2. Settle the three schema questions: par source, VAT basis, count unit.
-3. Rebuild the sheet's `Products` tab from `products_tab_proposed.csv`, adding
-   hidden `product_name_raw` plus `units_per_pack` and `packs_per_month_par`
-   columns.
+2. Settle the remaining schema question: VAT basis (net throughout recommended).
+3. Rebuild the sheet's `Products` tab from `products_tab_final.csv`, adding a
+   hidden `product_name_raw` column.
 4. Load `deliveries_backfill.csv` into `shop_consumable_deliveries` — that gives
    the hybrid model 5 months of real usage immediately instead of waiting for a
    second stock count.
 5. Run `syncProducts`, then check the 5 dropped products deactivated as intended.
+6. Take a fresh unit count on the first Tuesday. Do **not** convert the existing
+   `Stock` column — some of its figures are part-packs (see `MINIMUM-STOCK.md`).
