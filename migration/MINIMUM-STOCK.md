@@ -168,23 +168,49 @@ demand that was unsafe.
   `units_per_pack` to convert for ordering. Known for 45 of 52; unknown for Pens,
   Notepads, Paper, and the 14 first-aid lines.
 - **Decimals are fine and expected** — half a 5L bottle is a real count of 0.5.
-- **The existing count needs a fresh start, not a conversion.** Several figures in
-  the current `Stock` column are part-*packs*: bin bags `0.5`, washing up liquid
-  `0.5`, Puly `0.5`, paper `0.5`, Greenspeed `2.5`. Read as units, 0.5 bin bags
-  instead of 100 is badly wrong.
+
+### The existing counts can't be salvaged
+
+The current `Stock` column never recorded whether a figure was packs or items, and
+it turns out to be **both**. Tampons and pads proved it: counts of `4` and `11`
+read as items look like an emergency, but read as packs they're 256 and 484 items
+— which matches the surplus actually on the shelf. Read as items, the model
+demanded an order of 444 tampons.
+
+So the model now records a count basis per product and **refuses to produce an
+order where the basis is unknown**:
+
+| basis | products | how it was established |
+|---|---|---|
+| units | 2 | stated in the sheet's notes (`counted in rolls` / `counted per roll`) |
+| packs | 3 | tampons and pads (confirmed surplus), bin bags (`0.5` of a 200-bag pack) |
+| doesn't matter | 38 | one item per pack, or the count is zero |
+| **ambiguous** | **9** | nothing recorded either way |
+
+The 9 that can't be decided: Chalk Block (1 block or 8?), D Batteries (5 or 40?),
+Chill Tubs Sanitiser (3 or 60?), Wet kit bag (3 or 60?), Water Softener Salt (36
+or 360?), Glade (3 or 12?), Puly, Paper, Pens.
+
+Don't convert them. **Take a fresh count on the first Tuesday with the unit
+written into the column header.**
 
 ## What this produces right now
 
-Against the counts currently in the sheet, **29 of 52 products are at or below
-their minimum**. Expected on a first proper count rather than a sign the
-thresholds are wrong — plenty of rows genuinely read `0`, and reactive ordering is
-exactly what leaves a cupboard looking like that. It'll settle after a cycle or
-two.
+With the basis applied: **19 products below minimum, 5 in surplus, 9 undecidable,
+and the rest not counted.** The surplus list is tampons (4× minimum), pads (11×),
+chill tub filters (4.5×), toilet roll and Greenspeed.
 
-## Still needs a number from you
+That is a much more believable picture than the 29-item order list this produced
+before the pack/unit question was settled — and a good illustration of why the
+first clean count matters more than any of the thresholds.
 
-- **Pens** — no `Par Qty`, no pack size, no usage. The only product with nothing
-  to work from.
+## Loose ends
+
+- **Pens** — baseline set by the first order, so nothing needed up front. Still
+  needs a pack size once known.
+- **Tampons and pads** — the stored par of 6 packs/month (384 and 264 items) is
+  wrong by roughly 6×. With a surplus at 4 and 11 packs, real usage is well under
+  one pack a month. Both are flagged; neither drives an order.
 - **Microfibre Cloths** — no category on the Stock tab.
 - **The 14 first-aid lines** — `Par Qty` gives them a minimum, but with no pack
   size and no prices they can't produce an order. They're components of restock
