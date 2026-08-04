@@ -72,12 +72,16 @@ minimum stock (units) = daily usage x (7 + lead time + safety days)
 
 - **7 days** — if an item slips past this Tuesday's count you don't get another
   look for a week.
-- **lead time** — days from placing the order to it arriving.
+- **lead time** — days from placing the order to it arriving. **Confirmed
+  2026-08-04: 2 days for every supplier** — all of them deliver within 1–2 days.
+  An earlier version guessed 3–14 days by supplier; that was wrong and inflated
+  the minimums for Concept Spa, Halite and Newline in particular.
 - **safety days** — 3 normally, 7 for anything a member would notice running out
   (toilet roll, blue roll, shampoo, hand wash, sanitiser, bin bags, tampons, pads).
+  This split is a judgement call, not a measurement.
 
-For most items that lands around 12–17 days of cover, i.e. **roughly two weeks'
-worth**. Everything below is guard rails on that.
+So cover is **12 days** normally and **16 days** for the member-visible items.
+Everything below is guard rails on that.
 
 ## Four inputs, take the highest
 
@@ -105,10 +109,12 @@ formula is aiming for:
 
 | item | your Par Qty | burn rate | that's cover of | target |
 |---|---|---|---|---|
-| Jumbo T.Roll | 24 rolls | 1.50 rolls/day | 16 days | 17 |
-| 2ply Blue roll | 30 rolls | 1.67 rolls/day | 18 days | 17 |
+| Jumbo T.Roll | 24 rolls | 1.50 rolls/day | 16 days | 16 |
+| 2ply Blue roll | 30 rolls | 1.67 rolls/day | 18 days | 16 |
 
-You were already setting a fortnight of cover by eye.
+You were already setting a fortnight of cover by eye. With the real lead times in,
+the calculated minimum for toilet roll lands on **24.0 rolls** and for shampoo on
+**6.0 bottles** — both exactly your `Par Qty`.
 
 ## Where the correction *does* bite: order quantities
 
