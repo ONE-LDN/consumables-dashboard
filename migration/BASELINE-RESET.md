@@ -45,30 +45,38 @@ material:
 |---|---|
 | minimum + one month of usage, everywhere | £2,828.94 |
 | **the rule above** | **£875.08** |
+| the rule above, salt and plasters excluded | **£689.22** |
 
 Most of the saving is one line: the naive rule wanted 11 packs of water softener
 salt at £149.99 (£1,650), driven by a par of 10 packs/month that is one of the
-seven already known to be wrong.
+seven already known to be wrong. Saffron has since confirmed the salt is heavily
+overstocked, so it now sits in the do-not-order list — 36 bags on hand against a
+note saying 6 packs fill the tub.
 
 ### The reset order as it stands
 
-Indicative — real quantities come from Tuesday's count.
+Indicative — real quantities come from Tuesday's count. Full detail in
+`SHOPPING-LIST.md`.
 
 | supplier | lines | cost |
 |---|---|---|
 | Futures Supplies | blue roll ×11, hand wash ×3, conditioner ×2, moisturiser ×1 | £299.13 |
 | Out of Eden | Odyssey shampoo ×15 | £283.35 |
-| Amazon | bin bags, blue gloves, blue cloth, microfibre, Puly, washing up liquid — 2 packs each | £149.68 |
-| Newline | wet kit bag ×2 | £97.92 |
-| Concept Spa | chill tubs sanitiser ×3 | £45.00 |
-| *(no price yet)* | deodorants, Glade, hand sanitiser, key fobs, urinal case, 4× printer ink | — |
-| **total** | | **£875.08** |
+| Amazon | bin bags, blue gloves, blue cloth, microfibre, washing up liquid — 2 packs each | £106.74 |
+| *(price TBC)* | deodorants ×5 each, hand sanitiser, key fobs, urinal case, 4× printer ink | — |
+| **total where priced** | | **£689.22** |
 
 Mixed VAT basis — net for the trade suppliers, gross for Amazon. Settle that before
 treating the total as a budget figure.
 
-**Don't restock these 5** — already above minimum: tampons (4×), pads (11×), chill
-tub filters (4.5×), toilet roll (1.1×), Greenspeed (1.2×).
+A further 6 products (chalk block, chill tubs sanitiser, D batteries, Glade, Puly,
+wet kit bag) are orderable but need a look at the shelf first — their old count
+could be items or packs and the answer differs. Roughly £150–£250 depending.
+
+**Don't restock these 6** — already above minimum: pads (11×), water softener salt
+(3.6×, confirmed), tampons (4×), chill tub filters (4.5×), toilet roll (1.1×),
+Greenspeed (1.2×). Tampons, pads and salt are confirmed overstocked rather than
+inferred, and are hard-excluded from the reset order.
 
 **Hold back these 25** until a real count exists: the 7 products with a known-bad
 par (ice packs, hair bands, chalk block, tampons, pads, D batteries, water softener
@@ -123,7 +131,9 @@ month.
    then.
 5. Leave the slow movers on `Par Qty` and revisit at the end of the quarter.
 
+The resulting order is in `SHOPPING-LIST.md`.
+
 One thing worth deciding up front: whether the reset order goes in as a single
-purchase or is split across two weeks. £875 in one go is a cash-flow question, not
-a data question — splitting it costs you nothing analytically as long as every
+purchase or is split across two weeks. ~£700–900 in one go is a cash-flow question,
+not a data question — splitting it costs you nothing analytically as long as every
 delivery is logged.

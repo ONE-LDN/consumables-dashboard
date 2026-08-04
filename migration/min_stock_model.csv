@@ -12,7 +12,7 @@ First Aid Dressing 18x18cm,(new),First Aid,Amazon?,,4.0,,none,12,,,,4.0,your Par
 Triangular Bandages,(new),First Aid,Amazon?,,8.0,,none,12,,,,8.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
 Safety Pins,(new),First Aid,Amazon?,,48.0,,none,12,,,,48.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
 Eye Pad Bandages,(new),First Aid,Amazon?,,8.0,,none,12,,,,8.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
-Washproof Plasters,blue_plasters,First Aid,Amazon?,1,160.0,1,estimate (unverified),12,0.4,,,160.0,your Par Qty,161,30.0,,n/a,not counted,,
+Washproof Plasters,blue_plasters,First Aid,Amazon?,,160.0,,estimate (unverified),12,,,,160.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown
 Sterile Wipes,(new),First Aid,Amazon?,,80.0,,none,12,,,,80.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
 Waterproof Tape,(new),First Aid,Amazon?,,4.0,,none,12,,,,4.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
 Blue Gloves,(new),First Aid,Amazon?,,24.0,,none,12,,,,24.0,your Par Qty,,,,n/a,not counted,,units_per_pack unknown; no monthly usage figure
@@ -26,8 +26,8 @@ Ice packs,ice_packs,First Aid,Amazon?,24,,576,estimate (unverified),12,227.1,,,2
 Hair Bands,hair_bands,FOH Desk,Amazon?,100,1.0,100,estimate (unverified),12,39.4,,,100,one pack,200,30.0,0.0,n/a,count is zero - same either way,0.0,"par 1/mo implies 100 units/mo -> min 39.4, vs Par Qty 1.0: par is probably in units not packs"
 Chalk Block,chalk_block,Gym Floor,Amazon,8,2.0,16,estimate (unverified),12,6.3,,,8,one pack,24,30.0,1.0,AMBIGUOUS,no pack/unit basis recorded,,"par 2/mo implies 16 units/mo -> min 6.3, vs Par Qty 2.0: par is probably in units not packs"
 Puly Caffe Cleaner,puly_caffe_cleaner,Cafe,Amazon,2,2.0,4,estimate (unverified),12,1.6,,,2.0,your Par Qty,6,30.0,0.5,AMBIGUOUS,no pack/unit basis recorded,,
-Tampons,tampons,Toiletries,Amazon,64,64.0,384,estimate (unverified),16,201.8,,,64.0,your Par Qty,448,30.0,4.0,packs,confirmed surplus - 4 packs = 256 items,256.0,"par 6/mo implies 384 units/mo -> min 201.8, vs Par Qty 64.0: par is probably in units not packs"
-Sanitary Pads,pads,Toiletries,Amazon,44,44.0,264,estimate (unverified),16,138.8,,,44.0,your Par Qty,308,30.0,11.0,packs,confirmed surplus - 11 packs = 484 items,484.0,"par 6/mo implies 264 units/mo -> min 138.8, vs Par Qty 44.0: par is probably in units not packs"
+Tampons,tampons,Toiletries,Amazon,64,64.0,384,estimate (unverified),16,201.8,,,64.0,your Par Qty,448,30.0,4.0,packs,confirmed surplus - 4 packs = 256 items,256.0,"par 6/mo implies 384 units/mo -> min 201.8, vs Par Qty 64.0: par is probably in units not packs; CONFIRMED OVERSTOCKED - do not order"
+Sanitary Pads,pads,Toiletries,Amazon,44,44.0,264,estimate (unverified),16,138.8,,,44.0,your Par Qty,308,30.0,11.0,packs,confirmed surplus - 11 packs = 484 items,484.0,"par 6/mo implies 264 units/mo -> min 138.8, vs Par Qty 44.0: par is probably in units not packs; CONFIRMED OVERSTOCKED - do not order"
 D Batteries (Ergs),d_batteries,FOH Desk,Amazon,8,8.0,64,estimate (unverified),12,25.2,10,Need to have 10 on hand,10,note in the sheet,80,33.0,5.0,AMBIGUOUS,no pack/unit basis recorded,,"par 8/mo implies 64 units/mo -> min 25.2, vs Par Qty 8.0: par is probably in units not packs"
 Key Fobs,key_fobs,FOH Desk,,1,,1,estimate (unverified),17,0.6,,,1,one pack,2,30.0,0.0,n/a,count is zero - same either way,0.0,no Par Qty set
 Blue cloth,blue_cloth,Cafe,Amazon,6,6.0,6,estimate (unverified),12,2.4,,,6.0,your Par Qty,12,30.0,0.0,n/a,count is zero - same either way,0.0,
@@ -36,7 +36,7 @@ Chill Tub Filters,chill_tub_filters,Toiletries,Concept Spa,1,1.0,4,estimate (unv
 Wet kit bag,wet_kit_bags,Toiletries,Newline,20,20.0,10.0,estimate (unverified),24,7.9,,,20.0,your Par Qty,40,61.0,3.0,AMBIGUOUS,no pack/unit basis recorded,,
 Bin bags,bin_bags,Staff Room,Amazon,200,200.0,400,estimate (unverified),16,210.2,,,210.2,usage x cover days,800,45.0,0.5,packs,0.5 of a 200-bag pack,100.0,Par Qty 200.0 is BELOW the calculated 210.2 - raise it
 Washing up liquid,washing_up_liquid,Cafe,Amazon,1,1.0,1,estimate (unverified),12,0.4,,,1.0,your Par Qty,2,30.0,0.5,n/a,one item per pack,0.5,
-Water Softener Salt,water_softener_salt,Plant room,Halite,10,10.0,100,estimate (unverified),17,55.8,6,6 packs to fill,10.0,your Par Qty,110,30.0,36.0,AMBIGUOUS,no pack/unit basis recorded,,"par 10/mo implies 100 units/mo -> min 55.8, vs Par Qty 10.0: par is probably in units not packs"
+Water Softener Salt,water_softener_salt,Plant room,Halite,10,10.0,100,estimate (unverified),17,55.8,6,6 packs to fill,10.0,your Par Qty,110,30.0,36.0,units,"confirmed overstocked - 36 bags, note says 6 packs fill the tub",36.0,"par 10/mo implies 100 units/mo -> min 55.8, vs Par Qty 10.0: par is probably in units not packs; CONFIRMED OVERSTOCKED - do not order"
 Urinal case,urinal_shields,Toiletries,Amazon,10,,2.0,estimate (unverified),12,0.8,,,10,one pack,20,152.0,0.0,n/a,count is zero - same either way,0.0,no Par Qty set
 Blue Gloves Large,blue_gloves_large,Staff Room,Amazon,100,,200,estimate (unverified),12,78.8,,,100,one pack,300,30.0,0.0,n/a,count is zero - same either way,0.0,no Par Qty set
 Printer Ink - Black,printer_ink_blk,FOH Desk,Amazon,1,1.0,1,estimate (unverified),12,0.4,,,1.0,your Par Qty,2,30.0,1.0,n/a,one item per pack,1.0,
