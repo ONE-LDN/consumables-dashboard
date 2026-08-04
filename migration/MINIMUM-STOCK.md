@@ -97,10 +97,11 @@ highest of four candidates:
 | **One pack** | You buy in packs, so a trigger below one pack is meaningless. |
 
 This is why the reactive-ordering correction barely moved the minimums: taking the
-highest meant your `Par Qty` was already carrying the fast movers. The correction
-raised toilet roll from 24 to 25.5 rolls and shampoo from 6 to 6.4, and left the
-rest alone. **The design was robust to the bad input** — which is the argument for
-keeping it that way.
+highest meant your `Par Qty` was already carrying the fast movers. With the
+confirmed 2-day lead times the calculation lands on **24.0 rolls** for toilet roll
+and **6.0 bottles** for shampoo — exactly your `Par Qty` in both cases, reached by
+a completely independent route. **The design was robust to the bad input**, which is
+the argument for keeping it that way.
 
 ## Your `Par Qty` looks well-judged
 
@@ -116,23 +117,30 @@ You were already setting a fortnight of cover by eye. With the real lead times i
 the calculated minimum for toilet roll lands on **24.0 rolls** and for shampoo on
 **6.0 bottles** — both exactly your `Par Qty`.
 
-## Where the correction *does* bite: order quantities
+## Order quantities: a second, separate number
 
 ```
-order up to = minimum stock + one month of usage,  rounded up to whole packs
+order up to = minimum stock + one month of usage (at the floor rate)
 ```
 
-Understated usage means undersized orders — and undersized orders are the
-mechanism that keeps you reordering reactively. This is where the numbers moved:
+The minimum says *when* to order; the order-up-to level says *how much*. If they
+are the same number you reorder every week, which is the treadmill the weekly count
+is meant to end. Current levels:
 
-| item | order-up-to before | after |
+| item | minimum | order up to |
 |---|---|---|
-| Jumbo T.Roll | 60 rolls | **72** |
-| 2ply Blue roll | 60 rolls | **84** |
-| Odyssey Shampoo | 13 | **18** |
+| Jumbo T.Roll | 24.0 rolls | 57.5 |
+| 2ply Blue roll | 30.0 rolls | 59.8 |
+| Odyssey Shampoo | 6.0 bottles | 12.4 |
 
-The cadence then falls out of the numbers rather than being set by hand — fast
-movers land on ~30 days, slow movers on 60–150. See `implied_order_every_days` in
+Worked example — blue roll, 20 rolls on hand against a minimum of 30. Ordering
+back to *the minimum* is 2 packs (32 rolls), which at 7–12 rolls a week is under
+the minimum again by next Tuesday. Ordering to the *refill level* is 7 packs (62
+rolls), which is 3–5 weeks of cover. That gap is the whole point of having two
+numbers.
+
+Cadence then falls out rather than being set by hand — fast movers land on ~30
+days, slow movers on 60–150. See `implied_order_every_days` in
 `min_stock_model.csv`. **You don't need the `Cadence` column; it can go.**
 
 ## Why the weekly count is the real fix

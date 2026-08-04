@@ -44,44 +44,45 @@ material:
 | rule | reset order |
 |---|---|
 | minimum + one month of usage, everywhere | £2,828.94 |
-| **the rule above** | **£875.08** |
-| the rule above, salt and plasters excluded | **£689.22** |
+| the rule above, sized on the burn rate | £752.01 |
+| **the rule above, sized on the purchase floor** | **£800.53** |
 
-Most of the saving is one line: the naive rule wanted 11 packs of water softener
-salt at £149.99 (£1,650), driven by a par of 10 packs/month that is one of the
-seven already known to be wrong. Saffron has since confirmed the salt is heavily
-overstocked, so it now sits in the do-not-order list — 36 bags on hand against a
-note saying 6 packs fill the tub.
+The naive rule wanted 11 packs of water softener salt at £149.99 (£1,650), driven by
+a par of 10 packs/month that is one of the seven known to be wrong. Saffron has since
+confirmed the salt is heavily overstocked, so it sits in the do-not-order list — 36
+bags on hand against a note saying 6 packs fill the tub.
 
 ### The reset order as it stands
 
 Indicative — real quantities come from Tuesday's count. Full detail in
-`SHOPPING-LIST.md`.
+`SHOPPING-LIST.md` and `shopping_list.csv`.
 
 | supplier | lines | cost |
 |---|---|---|
-| Futures Supplies | blue roll ×11, hand wash ×3, conditioner ×2, moisturiser ×1 | £299.13 |
-| Out of Eden | Odyssey shampoo ×15 | £283.35 |
-| Amazon | bin bags, blue gloves, blue cloth, microfibre, washing up liquid — 2 packs each | £106.74 |
-| *(price TBC)* | deodorants ×5 each, hand sanitiser, key fobs, urinal case, 4× printer ink | — |
-| **total where priced** | | **£689.22** |
+| Futures Supplies | blue roll ×7, hand wash ×3, conditioner ×2, moisturiser ×1, hand sanitiser ×2 | £289.13 |
+| Out of Eden | Odyssey shampoo ×10 | £188.90 |
+| Amazon | bin bags ×2, blue gloves ×2, blue cloth ×2, microfibre ×2, Puly ×2, urinal shields ×2, washing up liquid ×2 | £179.58 |
+| Newline | wet kit bag ×2 | £97.92 |
+| Concept Spa | chill tubs sanitiser ×3 | £45.00 |
+| *(price TBC)* | deodorants ×5 each | — |
+| **17 lines, total where priced** | | **£800.53** |
 
-Mixed VAT basis — net for the trade suppliers, gross for Amazon. Settle that before
-treating the total as a budget figure.
-
-A further 6 products (chalk block, chill tubs sanitiser, D batteries, Glade, Puly,
-wet kit bag) are orderable but need a look at the shelf first — their old count
-could be items or packs and the answer differs. Roughly £150–£250 depending.
+Mixed VAT basis — net for the trade suppliers, gross for Amazon and for the two
+prices taken from the old record. Settle that before treating the total as a budget
+figure.
 
 **Don't restock these 6** — already above minimum: pads (11×), water softener salt
-(3.6×, confirmed), tampons (4×), chill tub filters (4.5×), toilet roll (1.1×),
+(3.6×, confirmed), tampons (4×), chill tub filters (6.3×), toilet roll (1.1×),
 Greenspeed (1.2×). Tampons, pads and salt are confirmed overstocked rather than
-inferred, and are hard-excluded from the reset order.
+inferred, and are hard-excluded.
 
-**Hold back these 25** until a real count exists: the 7 products with a known-bad
-par (ice packs, hair bands, chalk block, tampons, pads, D batteries, water softener
-salt), the 14 first-aid lines, and Sea Kelp shampoo, paper, pens, notepads. All are
-missing either a pack size or a defensible number, and Tuesday's count supplies it.
+**Count but never order (5):** the four printer inks (new stock just arrived — count
+them to learn how long a set lasts) and key fobs (handled separately).
+
+**Hold back 24** until a real count exists: the 14 first-aid lines; ice packs, hair
+bands, chalk block and D batteries (usage figures known wrong); Sea Kelp shampoo,
+paper, pens and notepads (no pack size); and Glade, whose old count could still be
+cans or packs. Tuesday's count supplies what each is missing.
 
 ## 4. Nothing may hit zero during the measurement window
 
