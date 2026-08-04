@@ -39,8 +39,27 @@ All four point the same way. It doesn't work for the slow movers — moisturiser
 counts 3 against 2 delivered, so the "zero at order" premise plainly fails there,
 and those keep their floor figure.
 
-Caveat: this is one count and one assumption. Treat it as a direction of travel,
-not a measurement. It's used for order sizing where it's higher than the floor.
+### But burn overstates too — dispenser refills
+
+A delivery triggers a refill round: stock moves from cupboard to wall dispenser or
+cubicle holder. That is stock *moving*, not stock *used*, and the burn window
+catches it as consumption.
+
+The evidence fits. The three items with a big burn-to-floor gap are all
+refill-into-something items — shampoo 1.78×, blue roll 1.70×, toilet roll 1.36×.
+The one without a gap, hand wash at 1.04×, was measured over 71 days, long enough
+for a refill spike to average out.
+
+So **burn overstates and the purchase floor understates; the truth is between.**
+The model splits them by consequence:
+
+| used for | figure | why |
+|---|---|---|
+| the **minimum** | burn (higher) | being wrong here is safe — it's the stockout guard |
+| the **order quantity** | purchase floor (lower) | being wrong here is expensive, and a weekly count catches an undersized order within 7 days |
+
+That is what dropped the shampoo order from 15 bottles to 10, and the blue roll
+from 11 packs to 7.
 
 ## The rule
 
