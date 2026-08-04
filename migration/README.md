@@ -144,6 +144,7 @@ roll in rolls. **Decided: count in individual units throughout**, with
 | `products_tab_final.csv` | The canonical 52 products from the `Stock` tab, restructured for `Code.gs`, keys preserved, with `units_per_pack` / `count_unit` / `min_stock_units` / `order_up_to_units` added. |
 | `min_stock_model.csv` | The minimum-stock working for all 52 products: inputs, which candidate set the minimum, order-up-to level, implied cadence, count basis, per-row flags. |
 | `MINIMUM-STOCK.md` | How the minimum is worked out, and why. |
+| `BASELINE-RESET.md` | The plan to clear the slate at the next count, restock to a known level, and measure real usage from the weekly counts. Includes the reset order (£875) and what's readable when. |
 | `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. Still worth loading — the orders genuinely happened and `orders_between` needs them; it was only the demand inference that was unsafe. |
 
 ## Decisions taken (2026-08-04)
@@ -172,3 +173,6 @@ roll in rolls. **Decided: count in individual units throughout**, with
 6. Take a fresh unit count on the first Tuesday, with the unit in the column
    header. Do **not** convert the existing `Stock` column — it mixes packs and
    items, and 9 products can't be told apart (see `MINIMUM-STOCK.md`).
+7. Treat that count as the baseline and restock from it — see `BASELINE-RESET.md`.
+   Measured usage from consecutive counts then replaces the estimated pars, fast
+   movers first.
