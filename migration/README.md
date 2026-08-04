@@ -1,0 +1,157 @@
+# Migration — `consumables_catalogue_v2` → dashboard catalogue
+
+Analysis of the new Google Sheet
+([`1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4`](https://docs.google.com/spreadsheets/d/1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4/edit))
+against what is live in Supabase (`shop_product_lookup`, `category='Consumables'`).
+
+**No dashboard or Apps Script code has been changed.** These are read-only
+working files to agree the mapping before anything is synced.
+
+## What's in the new sheet
+
+| Tab | Rows | Columns | Role |
+|---|---|---|---|
+| `Stock` | 52 products | Product, Category, Supplier, Par Qty, Cost, Cadence, **Stock**, Notes, *(unlabelled col I)* | The stock count sheet. Authoritative per Saffron. Carries live on-hand counts. |
+| `Product List (Updated)` | 55 products | Product, Category, Supplier, Qty, Cost, Cadence, Notes | The catalogue. Superset of `Stock` by 3 stationery rows. |
+| `Consumables Invoices` | 26 order lines | Invoice Date, Description, Qty, Supplier, Price, Net Amount | Feb–Jul 2026 purchase history, transcribed from 13 supplier invoices. |
+
+Live in Supabase: **40 active** consumables (+ ~40 already-inactive legacy rows),
+keyed on short slugs (`toilet_rolls`, `blue_rolls`, …) with a separate friendly
+`display_name`.
+
+## The drift, in order of consequence
+
+### 1. The sheet has no monthly par — and that is the field predictions run on
+
+`monthly_par_packs` is the baseline of the prediction model. Neither sheet column
+supplies it:
+
+- `Par Qty` is **target on-hand**, not monthly consumption.
+- `Cadence` is a free-text note in five different formats (`6 pk/pm`, `1 p/m`,
+  bare `1`/`7`, `?`, blank).
+
+The invoice tab proves the existing DB pars are already correct — they match
+invoice-derived consumption over the 4.83-month window to 2 d.p.:
+
+| product | packs bought | packs/month (actual) | DB `monthly_par_packs` | sheet `Par Qty` | sheet `Cadence` |
+|---|---|---|---|---|---|
+| toilet_rolls | 27 | **5.59** | 5.5 | 24 rolls (= 4 packs) | 6 pk/pm |
+| blue_rolls | 24 | **4.97** | 5.4 | 30 rolls (= 5 packs) | 6 pk/pm |
+| shampoo (Odyssey) | 31 | **6.42** | 7 | 6 | 7 |
+| conditioner | 3 | **0.62** | 0.6 | 2 | 1 |
+| hand_wash | 4 | **0.83** | 0.8 | 2 | 1 |
+| moisturiser | 3 | **0.62** | 0.6 | 3 | 1 |
+| multipurpose_cleaner | 2 | **0.41** | 0.4 | 2 | (blank) |
+
+**Do not overwrite `monthly_par_packs` from `Par Qty` or `Cadence`.** Keep the
+existing pars, and add a separate `packs_per_month_par` column to the sheet so it
+stays explicit.
+
+### 2. Product names changed wholesale, so a naive sync wipes the catalogue
+
+The sheet identifies products by full supplier description
+(`Jumbo T.Roll 2ply 2.25" Core J26300 300m`); Supabase keys on `toilet_rolls`.
+`syncProducts` reconciles by `product_name_raw`, so running it against the new
+sheet as-is would deactivate all 40 live rows, insert 55 unrelated ones, and
+orphan every count and delivery.
+
+Mitigating factor: history is currently **1 stock take (2026-07-29, 38 products)
+and 0 deliveries**. A re-key is cheap today and gets more expensive every week.
+
+Recommended: keep the slug as the key, add a hidden `product_name_raw` column to
+the sheet (same pattern the `Stock Count` tab already uses), and let the full
+supplier description live in `order_link_or_desc` where it belongs.
+
+### 3. Cost column mixes VAT bases
+
+The seven trade-supplier prices are **net ex-VAT** in the sheet and **gross** in
+the DB — exactly ×1.20 in every case, verified against the invoice tab. The
+Amazon prices are identical in both, i.e. VAT-inclusive retail.
+
+So the sheet's `Cost` column is currently net for Futures/Out of Eden and gross
+for Amazon. The shopping-list totals need one basis. Recommend **net ex-VAT
+throughout** (matches the invoices), which means dividing the Amazon figures.
+
+Six prices have genuinely changed and should be taken from the sheet:
+
+| product | DB | sheet |
+|---|---|---|
+| Sanitary Pads | £28.76 | £7.99 |
+| D Batteries (Ergs) | £10.76 | £15.99 |
+| Chalk Block | £13.32 | £15.99 |
+| Puly Caffe Cleaner | £19.79 | £21.47 |
+| Washing up liquid | £12.46 | £11.87 |
+| Hair Bands | £4.89 | £3.99 |
+
+Printer ink is £224.90 in the DB with no sheet price — that looks like a whole
+multipack booked against one cartridge and is worth checking.
+
+### 4. Category means something different now
+
+DB `subcategory` is a storage location (`Main` / `FOH Desk` /
+`Cafe (HP Cupboard)` / `Printer`). The sheet's `Category` is a mix of location
+and product type: `Toiletries`, `Gym Floor`, `Staff Room`, `First Aid`,
+`FOH Desk`, `Cafe`, `Plant room`, `Cleaning`.
+
+The new taxonomy is more useful for ordering, but it is a different axis, so the
+dashboard's location grouping changes meaning. Note `Greenspeed Techno Multi` is
+`Staff Room` on the Stock tab and `Cleaning` on the Product List — the two tabs
+disagree. Two columns (location + category) would settle this properly.
+
+### 5. First aid went from one line to sixteen
+
+The DB holds a single `hs_refills` (320-piece kit, £24.53) plus `ice_packs`. The
+sheet itemises 16 first-aid lines, all `Split between 4 boxes`, all with no cost
+and supplier `Amazon?`. They also have no stock counts.
+
+These are consumption-tracked components of restock boxes, not order units. They
+will produce 14 new products with no price, no par and no count — every one
+flagged "order now" with a £0 suggested order.
+
+### 6. Counting unit conflicts with the schema
+
+`shop_stock_takes` stores counts **in packs**. The sheet counts toilet roll and
+blue roll **in rolls** (`6 rolls per pack. counteed in rolls`, count = 27 rolls =
+4.5 packs). Left as-is, the two highest-volume items are out by 6×. Either
+convert on submit or add a `count_unit` column.
+
+### 7. Smaller items
+
+- 5 live products have no row in the new sheet and would be silently
+  deactivated: `plastic_food_bags`, `clinell_wipes`, `kleenex_tissues`,
+  `dispenser_pumps`, `blue_plasters`. Intentional or dropped by accident?
+- `Sea Kelp Luxury Shampoo 5L Refill` is noted `no longer stock` but is still a
+  row in both tabs — retire it rather than add it. Odyssey replaced it.
+- `Urinal case` vs DB `Urinal Shields (x10)` — same item?
+- `Hand sanitiser` vs DB `Sanitiser Gel` (5L, Futures) — sheet has no supplier
+  and the note reads `Oceanfree Professional?`.
+- 3 stationery rows exist on the Product List but not the Stock tab
+  (`Highlighers`, `White board marker`, `Permamnent marker`) — count them or drop
+  them.
+- `Notes` mixes order descriptions (`DCS 200 heavy duty bin bags 80L`) with
+  operational instructions (`stock take every tuesday`, `need 1 on hand`). Only
+  the first kind belongs in `order_link_or_desc`.
+- Column I is unlabelled overflow — two cells of notes that spilled out of H.
+- Typos to fix at source: `counteed`, `Highlighers`, `Permamnent`,
+  `Glade airfreshner sparys`.
+- `units_per_pack` has no column at all; pack size only appears inside note text.
+
+## Files here
+
+| File | What it is |
+|---|---|
+| `crosswalk.csv` | Every sheet row mapped to its live Supabase key, with field-level drift, VAT basis, and 9 rows flagged for a decision. 34 matched, 14 new first-aid, 7 other new, 5 dropped. |
+| `products_tab_proposed.csv` | The 55 products restructured into the 8 columns `Code.gs` expects, keys preserved, `_review` column listing what each row still needs. |
+| `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. |
+
+## Suggested sequence
+
+1. Agree the 9 flagged rows in `crosswalk.csv`.
+2. Settle the three schema questions: par source, VAT basis, count unit.
+3. Rebuild the sheet's `Products` tab from `products_tab_proposed.csv`, adding
+   hidden `product_name_raw` plus `units_per_pack` and `packs_per_month_par`
+   columns.
+4. Load `deliveries_backfill.csv` into `shop_consumable_deliveries` — that gives
+   the hybrid model 5 months of real usage immediately instead of waiting for a
+   second stock count.
+5. Run `syncProducts`, then check the 5 dropped products deactivated as intended.
