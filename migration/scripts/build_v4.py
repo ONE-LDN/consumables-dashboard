@@ -181,23 +181,39 @@ NOTE_MIN = {
     "notepads":      (1, "need 1 on hand"),
 }
 
-# Rows where reading Par Qty as PACKS disagrees with the unit figure the
-# previous sheet (v3) carried. Listed so they get asked about rather than
-# silently adopted. (key, v3_par_in_units, v4_par_x_pack, note)
-PAR_DIVERGENCE = {
-    "chalk_block":          (2,   16,  "v3 said 2 blocks and the shelf held 1, so 2 probably still means 2 blocks, not 2 cases of 8"),
-    "blue_cloth":           (6,   12,  "v3 said 6 rolls (one case); 2 cases = 12 rolls"),
-    "chill_tubs_sanitiser": (20,  40,  "v3 said 20 tubs (one pack); 2 packs = 40 tubs"),
-    "wet_kit_bags":         (20, 500,  "supplier changed Newline (pack of 20) to Amazon (pack of 250), so v3's 20 does not carry over"),
-    "water_softener_salt":  (10, None, "pack size unknown; 10 most likely means 10 bags, not 10 packs"),
-    "blue_gloves_large":    (None, 200, "v3 blank; DB pack was 100, sheet now says 200 - which is right?"),
+# ---------------------------------------------------------------------------
+# 3a. Par Unit — DECIDED 2026-08-05: the sheet gains an explicit `Par Unit`
+#     column rather than the header asserting one basis for all 35 rows.
+#     v4's Par Qty is in packs on most rows but items on a few, and guessing
+#     uniformly is what produced a 100-bag salt minimum.
+#
+#     The values below are a PROPOSAL for Saffron to check, not a finding. The
+#     column in the sheet is authoritative once she has filled it.
+# ---------------------------------------------------------------------------
+
+# Par Qty is in individual items on these rows. Evidence per row:
+PAR_UNIT_ITEMS = {
+    "chalk_block":         "v3 said 2 blocks and the shelf held 1; 2 cases of 8 would be 16 blocks",
+    "water_softener_salt": 'pack size unknown and the note uses "pack" to mean one bag; 10 packs at £149.99 would be ~£1,500',
+    "paper_printer":       'the note says "2 on hand", which is 2 reams',
 }
 
-# Rows where reading Par Qty as packs produces a figure large enough to be
-# worth refusing to sync until a human confirms it. Everything in
-# PAR_DIVERGENCE is emitted with min_confirmed=no; these are the ones where
-# being wrong is expensive rather than merely untidy.
-MIN_DO_NOT_SYNC = {"wet_kit_bags", "water_softener_salt", "chalk_block"}
+# Par Qty reads as packs, but the resulting figure is a change from v3 rather
+# than a conversion of it — so it needs confirming before it drives an order.
+PAR_UNIT_UNCERTAIN = {
+    "chill_tubs_sanitiser": "2 packs = 40 tubs, double v3's 20 - deliberate increase?",
+    "blue_cloth":           "2 cases = 12 rolls, double v3's 6 - deliberate increase?",
+    "wet_kit_bags":         "2 packs of 250 = 500 bags (~£26); v3's 20 was a Newline pack of 20 and does not carry over",
+    "blue_gloves_large":    "1 pack = 200 gloves, but the old DB row said 100 per pack",
+}
+
+# What v3's Par Qty said in items, for the rows where v4's figure is not simply
+# a conversion of it. Kept as the audit trail behind PAR_UNIT_ITEMS and
+# PAR_UNIT_UNCERTAIN above; not used in the derivation.
+V3_PAR_ITEMS = {
+    "chalk_block": 2, "blue_cloth": 6, "chill_tubs_sanitiser": 20,
+    "wet_kit_bags": 20, "water_softener_salt": 10, "blue_gloves_large": None,
+}
 
 # ---------------------------------------------------------------------------
 # 4. First Aid — split onto its own tab. Counted on its own cadence and
@@ -270,12 +286,23 @@ def build_products():
         else:
             upp, upp_src = None, "unknown"
 
-        # Par Qty is read as PACKS. Evidence: on 14 of the rows that changed
-        # between v3 and v4, v4_par x pack_size reproduces v3's unit figure
-        # exactly (24, 30, 2, 8, 200, 24, 12, ...).
+        # Par Unit, per row. Default is packs: on every row whose number changed
+        # between v3 and v4, v4_par x pack_size reproduces v3's item figure
+        # exactly (24, 30, 200, 24, 12, 8, 2). The exceptions are declared above.
+        if key in PAR_UNIT_ITEMS:
+            par_unit, par_why = "items", PAR_UNIT_ITEMS[key]
+        elif upp == 1:
+            par_unit, par_why = "packs", "pack of 1, so packs and items are the same number"
+        else:
+            par_unit, par_why = "packs", PAR_UNIT_UNCERTAIN.get(
+                key, "v4 Par x Pack Size reproduces v3's item figure exactly")
+
         par_units = None
         par_src = "no Par Qty set"
-        if par is not None and upp is not None:
+        if par is not None and par_unit == "items":
+            par_units = par
+            par_src = f"sheet Par Qty ({par} items), Par Unit = items"
+        elif par is not None and upp is not None:
             par_units = par * upp
             par_src = f"sheet Par Qty ({par} packs) x {upp} items/pack"
         elif par is not None:
@@ -293,12 +320,11 @@ def build_products():
 
         flags = []
         min_confirmed = "yes"
-        if key in PAR_DIVERGENCE:
-            v3, v4x, why = PAR_DIVERGENCE[key]
-            flags.append(f"CONFIRM par basis: {why}")
+        if key in PAR_UNIT_UNCERTAIN:
+            flags.append(f"CONFIRM Par Unit: {PAR_UNIT_UNCERTAIN[key]}")
             min_confirmed = "no"
-        if key in MIN_DO_NOT_SYNC:
-            min_confirmed = "no - do not sync"
+        elif key in PAR_UNIT_ITEMS:
+            flags.append(f"Par Unit set to items: {PAR_UNIT_ITEMS[key]}")
         if upp is None:
             flags.append("pack size unknown - cannot size an order")
         elif upp_src.startswith("carried"):
@@ -319,7 +345,9 @@ def build_products():
             "price_per_pack_gbp": _n(cost),
             "units_per_pack": _n(upp),
             "count_unit": COUNT_UNIT[key],
-            "par_packs_sheet": _n(par),
+            "par_qty_sheet": _n(par),
+            "par_unit": par_unit if par is not None else "",
+            "par_unit_basis": par_why if par is not None else "",
             "min_stock_units": _n(min_units),
             "min_confirmed": min_confirmed,
             "order_class": "measure_only" if key in MEASURE_ONLY else "reorder",
@@ -401,4 +429,7 @@ if __name__ == "__main__":
     print(f"\n{len(products)} consumables, {len(FIRST_AID)} first aid lines")
     print(f"pack size unknown ({len(no_pack)}): {', '.join(no_pack)}")
     print(f"no price ({len(no_price)}): {', '.join(no_price)}")
-    print(f"par basis to confirm ({len(PAR_DIVERGENCE)}): {', '.join(PAR_DIVERGENCE)}")
+    print(f"Par Unit = items ({len(PAR_UNIT_ITEMS)}): {', '.join(PAR_UNIT_ITEMS)}")
+    print(f"Par Unit to confirm ({len(PAR_UNIT_UNCERTAIN)}): {', '.join(PAR_UNIT_UNCERTAIN)}")
+    syncable = [p for p in products if p["min_confirmed"] == "yes" and p["min_stock_units"] != ""]
+    print(f"minimums safe to sync: {len(syncable)} of {len(products)}")

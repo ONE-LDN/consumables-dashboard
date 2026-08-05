@@ -80,13 +80,28 @@ wrong:
 | Nitrile Gloves (L) | — | 200 | 200 gloves | sheet says 200/pack, DB said 100 |
 
 So the honest position is that **`Par Qty`'s unit is mixed per row**, which is
-exactly the failure mode that made v3's `Stock` column unsalvageable. The fix is
-structural, not a better guess: **put the unit in the column header** —
-`Par Qty (packs)` — and make every row conform.
+exactly the failure mode that made v3's `Stock` column unsalvageable.
 
-Until that happens, `products_v4.csv` carries a `min_confirmed` column. 23
-minimums are derived and safe to sync; **12 are held back**, 3 of them marked
-*do not sync* because being wrong there is expensive.
+**Decided 2026-08-05: the sheet gains an explicit `Par Unit` column** stating
+`packs` or `items` per row. Rejected: asserting one basis for all 35 rows in the
+header, which is what produced the 100-bag salt minimum — a uniform rule is only
+safe if the data is uniform, and it isn't.
+
+`products_v4.csv` carries `par_unit` pre-filled with a proposed value and
+`par_unit_basis` with the evidence for it, so the column is checked rather than
+filled from scratch. **The sheet's column is authoritative once Saffron has it.**
+
+| | rows | |
+|---|---|---|
+| `packs` — v4 Par × Pack Size reproduces v3's item figure exactly | 21 | adopt |
+| `packs` — pack of 1, so both readings give the same number | 7 | adopt |
+| **`items`** | 3 | Chalk Block (2 blocks), Water Softener Salt (10 bags), Printer Paper (2 reams) |
+| **`packs`, but a change from v3 rather than a conversion** | 4 | Blue Cloth, Ice Bath Sanitiser, Wet Kit Bags, Nitrile Gloves — **confirm** |
+
+That resolves the three implausible figures: Chalk Block 16 → **2**, Water
+Softener Salt unknown → **10**, Printer Paper → **2**. **25 of 35 minimums are
+now safe to sync**, up from 23, with 4 held on the `Par Unit` question and 6
+simply unset because the sheet has no `Par Qty` for them.
 
 ---
 
@@ -233,7 +248,7 @@ Five tabs. `Code.gs` currently expects three (`Products`, `Stock Count`,
 
 | tab | role | who writes it |
 |---|---|---|
-| `Products` | the 35-line catalogue. Hidden col A = `product_name_raw`. Long description, brand, supplier, price, `Pack Size`, `Par Qty (packs)`, short `display_name` | Saffron, by hand |
+| `Products` | the 35-line catalogue. Hidden col A = `product_name_raw`. Long description, brand, supplier, price, `Pack Size`, `Par Qty`, **`Par Unit`**, short `display_name` | Saffron, by hand |
 | `Stock Count` | weekly. Rebuilt from Supabase. `Count (<unit>)` header per row | whoever counts |
 | `Order Log` | every delivery, in packs | whoever orders |
 | **`First Aid`** *(new)* | the 33-line first-aid catalogue | Saffron, by hand |
@@ -383,17 +398,17 @@ price, Newline VAT, pack sizes for 30 products, the first-aid split, the
 ## 10. Sequence
 
 1. **Delete the 38 junk counts.** Before anything reads them.
-2. **Settle the 6 `Par Qty` rows** in §1.3 and the 3 open decisions in §11.
+2. **Settle the 4 `Par Unit` rows** in §1.3 and the salt price in §12.
 3. **Rebuild the sheet:** `Products` from `products_v4.csv` with a hidden
-   `product_name_raw` column and `Par Qty (packs)` in the header; new
-   `First Aid` tab from `first_aid_v4.csv`.
+   `product_name_raw` column and a `Par Unit` column; new `First Aid` tab from
+   `first_aid_v4.csv`.
 4. **Patch `Code.gs`** — parameterise sheet/category, unit-aware count headers.
 5. **Patch `index.html`** — the `qty_cases × pack_size` fix first; it is the one
    that silently corrupts data.
 6. **Add `monthly_usage_units`; create the `First Aid` category.**
 7. **Run `syncProducts`** for both tabs. Verify: 35 + 33 active, and exactly the
-   4 intended deactivations.
-8. **Wire in the 04/08/2026 count** as baseline count 1 — see §11.
+   4 intended deactivations (confirmed intentional — §11).
+8. **Wire in the 04/08/2026 count** as baseline count 1, once supplied.
 9. **Load `deliveries_backfill.csv`.**
 10. **Place the reset order** from the baseline count, re-costed at v4 prices.
     Log every delivery in `Order Log` — usage is
@@ -413,31 +428,45 @@ During the reset, err generous.
 
 ---
 
-## 11. Open decisions
+## 11. Decisions taken 2026-08-05
 
-Each needs Saffron, not the model.
+- **`Par Unit` becomes a column on the sheet**, per row, rather than the header
+  asserting one basis for all 35. See §1.3.
+- **The 4 products absent from v4 are dropped on purpose** —
+  `plastic_food_bags`, `clinell_wipes`, `kleenex_tissues`, `dispenser_pumps`.
+  They go inactive on the next `syncProducts` run and that is the intended
+  outcome, so step 7's verification is a confirmation rather than a check for a
+  mistake.
+- **First aid is ordered via a BS 8599-1 refill pack.** Chase the kit supplier
+  before buying any of the 15 required lines individually. The item-by-item
+  costing route is explicitly not taken.
+- **The 04/08/2026 count will be supplied by Saffron** and wired in as baseline
+  count 1.
 
-1. **Where is the 04/08/2026 stock count?** It is not in Supabase (only the 38
-   junk rows) and not in v3 or v4 — v4 has no `Stock` column, and v3's still
-   holds the pre-04/08 figures. The first-aid count from that date is captured
-   in `FIRST-AID.md`; the consumables one is not in anything readable from here.
-   Nothing in step 8 can proceed without it.
-2. **The 6 `Par Qty` rows** in §1.3 — Chalk Block, Blue Cloth, Ice Bath
-   Sanitiser, Wet Kit Bags, Water Softener Salt, Nitrile Gloves. 3 are marked
-   *do not sync*.
+## 12. Still open
+
+1. **The 04/08/2026 count itself.** Saffron has it; it is not in Supabase, v3 or
+   v4. Step 8 waits on the numbers. It needs a unit per line — the count is in
+   items, and `unit_basis_v4.csv` states what a count of 1 means for each of the
+   35 products.
+2. **The 4 `Par Unit` rows** flagged in §1.3 — Blue Cloth, Ice Bath Sanitiser,
+   Wet Kit Bags, Nitrile Gloves. All read as `packs`, but each is a change from
+   v3 rather than a conversion of it, so each doubles or otherwise moves the
+   requirement. Held at `min_confirmed = no`.
 3. **Water Softener Salt: £149.99 for what?** Pack size blank, note says
-   "6 packs to fill tub". Per-bag or per-pallet changes the shopping list by an
-   order of magnitude.
-4. **`Microfibre Cloths` still has no category** — the only blank on the sheet.
+   "6 packs to fill tub". `Par Unit` is now set to `items` (10 bags), which makes
+   the minimum safe, but the *price* basis still changes the shopping list by an
+   order of magnitude. Do not let this line into a costed order until it is
+   settled.
+4. **`Microfibre Cloths` has no category** — the only blank on the sheet.
    Suggest `Staff Room`, alongside the other cleaning items.
-5. **Are the 4 deactivations intended?** `plastic_food_bags`, `clinell_wipes`,
-   `kleenex_tissues`, `dispenser_pumps` are live now and absent from v4. They
-   will go inactive on the next sync. Dropped on purpose, or lost in the rebuild?
-6. **First-aid refill pack** — does the kit supplier sell a BS 8599-1 refill
-   pack? Everything in §8's ordering plan rests on the answer.
-7. **`Chill Tub Filters`**: v3 counted 10 (4 new, 6 old) against a par of 1, and
+5. **Does the kit supplier sell a BS 8599-1 refill pack?** The route is decided;
+   the answer is not in yet. If they don't, §8's ordering plan needs revisiting.
+6. **`Chill Tub Filters`**: v3 counted 10 (4 new, 6 old) against a par of 1, and
    the note says replace every 3 months. Is the count new filters only?
-8. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
-   Both were in confirmed surplus, so blank may mean "don't reorder" — worth
-   making explicit rather than leaving as an empty cell. Both are zero-rated for
-   VAT if they ever enter a costed order.
+7. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
+   Both were in confirmed surplus, so blank probably means "don't reorder" —
+   worth making explicit rather than leaving an empty cell that reads as an
+   oversight. Both are zero-rated for VAT if they ever enter a costed order.
+8. **Concept Spa's VAT basis** — the last unverified line, worth £15.00 of
+   exposure. Newline's departure closed the other one.
