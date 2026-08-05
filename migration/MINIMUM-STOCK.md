@@ -11,6 +11,13 @@
 >    measurement behind it. Treat them as removed, not merely uncertain.
 > 2. Three of the four burn-checked products (Sea Kelp hand wash, conditioner,
 >    lotion) no longer exist; they are Odyssey products from a different supplier.
+> 3. **"The existing counts can't be salvaged" below is wrong.** Saffron
+>    confirmed 2026-08-05 that the `Stock` column was counted **per item, with
+>    fractions where a bottle or tub was part used**. Under that rule 30 of the
+>    34 counted lines read cleanly, and only Tampons, Pads, Bin Bags and Wet Kit
+>    Bags remain undecided — not the 9 claimed here. The column was usable all
+>    along; the convention had simply never been written down. The count is
+>    staged as baseline count 1 in `baseline_count_2026_08_04.csv`.
 >
 > What survives, and is still the basis of the plan: minimum = **highest of four
 > candidates**; **burn rate ≠ consumption** because a delivery triggers a refill

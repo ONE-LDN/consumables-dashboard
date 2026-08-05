@@ -1,0 +1,36 @@
+take_date,product_name_raw,display_name,location,count_as_written,count_basis,on_hand_items,count_unit,basis_confirmed,min_stock_units,min_confirmed,status,short_items,order_class,note
+2026-08-04,toilet_rolls,Toilet Roll,Toiletries,27,items,27,rolls,yes,24,yes,ok,,reorder,
+2026-08-04,blue_rolls,Blue Roll (centrefeed),Gym Floor,20,items,20,rolls,yes,30,yes,BELOW minimum,10.0,reorder,
+2026-08-04,multipurpose_cleaner,Multi-Surface Cleaner 5L,Staff Room,2.5,items,2.5,5L bottles,yes,2,yes,ok,,reorder,
+2026-08-04,hand_wash,Hand Wash 5L,Toiletries,0,items,0,5L bottles,yes,2,yes,BELOW minimum,2.0,reorder,
+2026-08-04,conditioner,Conditioner 5L,Toiletries,1,items,1,5L bottles,yes,2,yes,BELOW minimum,1.0,reorder,
+2026-08-04,moisturiser,Hand & Body Lotion 5L,Toiletries,3,items,3,5L bottles,yes,3,yes,ok,,reorder,
+2026-08-04,shampoo,Shampoo & Body Wash 5L,Toiletries,3,items,3,5L bottles,yes,6,yes,BELOW minimum,3.0,reorder,
+2026-08-04,hair_bands,Hair Bands,FOH Desk,0,items,0,bands,yes,100,yes,BELOW minimum,100.0,reorder,
+2026-08-04,chalk_block,Chalk Block,Gym Floor,1,items,1,blocks,yes,2,yes,BELOW minimum,1.0,reorder,
+2026-08-04,puly_caffe_cleaner,Coffee Machine Cleaner,Cafe,0.5,items,0.5,bottles,yes,2,yes,BELOW minimum,1.5,reorder,
+2026-08-04,tampons,Tampons,Toiletries,4,AMBIGUOUS,,tampons,no,,yes,unknown,,reorder,"a pack is 64 and Par Qty is exactly one pack. 4 tampons is near-empty; 4 boxes is 256 and matches the surplus recorded on 2026-08-04. Nobody counts 256 tampons individually, so this is probably boxes"
+2026-08-04,pads,Sanitary Pads,Toiletries,11,AMBIGUOUS,,pads,no,,yes,unknown,,reorder,a pack is 44 and Par Qty is exactly one pack. Same reasoning as tampons: 11 packets is 484 pads and matches the recorded surplus
+2026-08-04,d_batteries,D Batteries (Ergs),FOH Desk,5,items,5,batteries,yes,10,yes,BELOW minimum,5.0,reorder,
+2026-08-04,key_fobs,Key Fobs,FOH Desk,0,items,0,fobs,yes,,yes,no minimum set,,measure_only,
+2026-08-04,blue_cloth,Blue Cloth Roll,Cafe,0,items,0,rolls,yes,12,no,minimum unconfirmed,,reorder,
+2026-08-04,chill_tubs_sanitiser,Ice Bath Sanitiser,Toiletries,3,items,3,tubs,yes,40,no,minimum unconfirmed,,reorder,
+2026-08-04,chill_tub_filters,Ice Bath Filter,Toiletries,10,items (adjusted),4,filters,yes,1,yes,surplus,,reorder,"v3 note reads ""4 new ones. 6 old."" Only the 4 new filters are usable stock; the 6 old ones are spent and should not count toward a minimum of 1"
+2026-08-04,wet_kit_bags,Wet Kit Bags,Toiletries,3,AMBIGUOUS,,bags,no,500,no,unknown,,reorder,"3 bags against a Par Qty of 20 reads as almost out, which is plausible. But the pack changed from Newline's 20 to Amazon's 250, so neither the old par nor the old pack size helps here"
+2026-08-04,bin_bags,Bin Bags 80L,Staff Room,0.5,AMBIGUOUS,,bags,no,200,yes,unknown,,reorder,"0.5 of a bag is not a thing, so this one cannot be items. Half a 200-bag pack is 100; half a roll (if the pack is 4 rolls of 50) is 25"
+2026-08-04,washing_up_liquid,Washing Up Liquid 5L,Cafe,0.5,items,0.5,5L bottles,yes,1,yes,BELOW minimum,0.5,reorder,
+2026-08-04,water_softener_salt,Water Softener Salt,Plant room,36,items,36,bags,yes,10,yes,surplus,,reorder,
+2026-08-04,urinal_shields,Urinal Shields,Toiletries,0,items,0,shields,yes,,yes,no minimum set,,reorder,
+2026-08-04,blue_gloves_large,Nitrile Gloves (L),Staff Room,0,items,0,gloves,yes,200,no,minimum unconfirmed,,reorder,
+2026-08-04,printer_ink_blk,Printer Ink - Black,FOH Desk,1,items,1,cartridges,yes,1,yes,ok,,measure_only,
+2026-08-04,printer_ink_pink,Printer Ink - Pink,FOH Desk,1,items,1,cartridges,yes,1,yes,ok,,measure_only,
+2026-08-04,printer_ink_blue,Printer Ink - Blue,FOH Desk,1,items,1,cartridges,yes,1,yes,ok,,measure_only,
+2026-08-04,printer_ink_yellow,Printer Ink - Yellow,FOH Desk,1,items,1,cartridges,yes,1,yes,ok,,measure_only,
+2026-08-04,paper_printer,Printer Paper,FOH Desk,0.5,items,0.5,reams,yes,2,yes,BELOW minimum,1.5,reorder,
+2026-08-04,sure_deodorant_men,Deodorant - Men,Toiletries,0,items,0,cans,yes,24,yes,BELOW minimum,24.0,reorder,
+2026-08-04,sure_deodorant_women,Deodorant - Women,Toiletries,0,items,0,cans,yes,24,yes,BELOW minimum,24.0,reorder,
+2026-08-04,glade_sprays,Air Freshener Spray,Toiletries,3,items,3,cans,yes,,yes,no minimum set,,reorder,
+2026-08-04,microfibre_cloths,Microfibre Cloths,,,,,cloths,n/a,12,yes,unknown,,reorder,"not counted - blank cell, not a zero"
+2026-08-04,sanitiser_gel,Hand Sanitiser 5L,Toiletries,1,items,1,5L bottles,yes,1,yes,ok,,reorder,
+2026-08-04,pens,Pens,FOH Desk,12,items,12,pens,yes,,yes,no minimum set,,reorder,
+2026-08-04,notepads,Notepads,FOH Desk,,,,pads,n/a,1,yes,unknown,,reorder,"not counted - blank cell, not a zero"

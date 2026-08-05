@@ -167,6 +167,79 @@ dominate the whole shopping list.
 
 ---
 
+## 2a. The baseline count — 2026-08-04
+
+Supplied by Saffron 2026-08-05. It was the `Stock` column of
+`consumables_catalogue_v3` all along, which is why it could not be found: it was
+never labelled as a count. The basis, in her words:
+
+> *"Counted primarily per item and where bottles or tubs were in question,
+> fractions etc"*
+
+**That is a much better position than the previous session concluded.** It had
+written the column off entirely — *"never recorded whether a figure was packs or
+items, and it turns out to be both… 9 products cannot be told apart… not
+salvageable"* — and planned a fresh count on the strength of that. With the rule
+stated, **30 of the 34 counted lines read cleanly as items**, and the decimals
+are exactly where they should be: `2.5` bottles of Greenspeed, `0.5` of a Puly
+bottle, `0.5` of a washing-up bottle, `0.5` of a ream of paper. The column was
+usable; nobody had written down the convention.
+
+Staged in `baseline_count_2026_08_04.csv`, keyed to the v4 slugs, via
+`scripts/build_baseline_count.py`. What it produces:
+
+| | lines | |
+|---|---|---|
+| **below minimum** | 12 | the reset order |
+| surplus | 2 | Ice Bath Filters, Water Softener Salt (36 bags against a minimum of 10) |
+| ok | 4 | |
+| **basis held** | 4 | see below |
+| no usable minimum | 7 | 6 have no `Par Qty`; 1 is `min_confirmed = no` |
+| not counted | 2 | Microfibre Cloths, Notepads — **blank cells, which are not zeros** |
+| discarded | 1 | Sea Kelp Shampoo Refill (1 bottle) — retired product, no v4 row |
+
+### Below minimum, worst first
+
+| product | on hand | minimum | short |
+|---|---|---|---|
+| Hair Bands | 0 | 100 bands | 100 |
+| Deodorant — Men | 0 | 24 cans | 24 |
+| Deodorant — Women | 0 | 24 cans | 24 |
+| Blue Roll | 20 | 30 rolls | 10 |
+| D Batteries | 5 | 10 batteries | 5 |
+| Shampoo & Body Wash | 3 | 6 bottles | 3 |
+| Hand Wash | 0 | 2 bottles | 2 |
+| Coffee Machine Cleaner | 0.5 | 2 bottles | 1.5 |
+| Printer Paper | 0.5 | 2 reams | 1.5 |
+| Conditioner | 1 | 2 bottles | 1 |
+| Chalk Block | 1 | 2 blocks | 1 |
+| Washing Up Liquid | 0.5 | 1 bottle | 0.5 |
+
+Six of those are at **zero or a half**, which is the reactive-ordering pattern
+showing up in a single snapshot rather than in an argument about it.
+
+### The four lines the rule does not settle
+
+Held at `basis_confirmed = no` rather than guessed, because an on-hand figure
+wrong by the pack size is the one error that turns the reset order into either a
+stockout or a few hundred pounds of surplus.
+
+| product | as written | as items | as packs | why it resists |
+|---|---|---|---|---|
+| **Tampons** | 4 | 4 tampons | **256** | a pack is 64 and `Par Qty` is exactly one pack. Nobody counts 256 tampons individually, and a surplus was recorded on 04/08 — so probably 4 boxes |
+| **Sanitary Pads** | 11 | 11 pads | **484** | same shape: a pack is 44, and 11 packets matches the recorded surplus |
+| **Bin Bags** | 0.5 | — | **100** | half a bag is not a thing, so this one *cannot* be items. Half a 200-bag pack is 100; half a roll would be 25 |
+| **Wet Kit Bags** | 3 | **3 bags** | 60 | 3 against a par of 20 reads as almost out, which is plausible — but the pack changed from Newline's 20 to Amazon's 250, so neither the old par nor the old pack size helps |
+
+### One count adjusted
+
+**Chill Tub Filters: 10 → 4.** The v3 note reads *"4 new ones. 6 old."* Only the
+4 new filters are usable stock; counting the 6 spent ones would show 10 against
+a minimum of 1 and suppress a reorder indefinitely. This also answers a standing
+open question: the count is new filters only.
+
+---
+
 ## 3. The unit model — one unit, stated everywhere
 
 This is the part that has broken twice. The rule:
@@ -408,14 +481,16 @@ price, Newline VAT, pack sizes for 30 products, the first-aid split, the
 6. **Add `monthly_usage_units`; create the `First Aid` category.**
 7. **Run `syncProducts`** for both tabs. Verify: 35 + 33 active, and exactly the
    4 intended deactivations (confirmed intentional — §11).
-8. **Wire in the 04/08/2026 count** as baseline count 1, once supplied.
+8. **Load `baseline_count_2026_08_04.csv`** as count 1 — 29 usable lines, with
+   the 4 held lines resolved first or left out.
 9. **Load `deliveries_backfill.csv`.**
-10. **Place the reset order** from the baseline count, re-costed at v4 prices.
-    Log every delivery in `Order Log` — usage is
+10. **Place the reset order** from the 12 below-minimum lines in §2a, re-costed
+    at v4 prices. Log every delivery in `Order Log` — usage is
     `opening + orders_between − closing`, so an unlogged delivery makes the
     arithmetic lie.
-11. **Count every Tuesday.** From count 2, measured usage replaces the estimated
-    minimums, fast movers first. Expect to revise upward.
+11. **Count Tue 11/08 as count 2**, then every Tuesday. Count 2 is the first
+    measured usage this system has ever had. From there, measured usage replaces
+    the estimated minimums, fast movers first. Expect to revise upward.
 
 ### What is readable, and when
 
@@ -440,15 +515,18 @@ During the reset, err generous.
 - **First aid is ordered via a BS 8599-1 refill pack.** Chase the kit supplier
   before buying any of the 15 required lines individually. The item-by-item
   costing route is explicitly not taken.
-- **The 04/08/2026 count will be supplied by Saffron** and wired in as baseline
-  count 1.
+- **The 04/08/2026 count is v3's `Stock` column, counted in items with fractions
+  for part-used containers.** Staged as baseline count 1 — §2a. This reverses
+  the previous session's conclusion that the column was unsalvageable.
+- **No fresh count is needed before the reset.** The previous plan called for one
+  on Tue 11/08 because the 04/08 basis was thought to be undecidable. It isn't,
+  so 11/08 becomes count 2 — the first *usage* reading — rather than a redo of
+  count 1. That pulls the whole measurement schedule forward by a week.
 
 ## 12. Still open
 
-1. **The 04/08/2026 count itself.** Saffron has it; it is not in Supabase, v3 or
-   v4. Step 8 waits on the numbers. It needs a unit per line — the count is in
-   items, and `unit_basis_v4.csv` states what a count of 1 means for each of the
-   35 products.
+1. **Four lines of the baseline count** — Tampons, Sanitary Pads, Bin Bags, Wet
+   Kit Bags. See §2a. The other 30 are settled.
 2. **The 4 `Par Unit` rows** flagged in §1.3 — Blue Cloth, Ice Bath Sanitiser,
    Wet Kit Bags, Nitrile Gloves. All read as `packs`, but each is a change from
    v3 rather than a conversion of it, so each doubles or otherwise moves the
@@ -462,11 +540,9 @@ During the reset, err generous.
    Suggest `Staff Room`, alongside the other cleaning items.
 5. **Does the kit supplier sell a BS 8599-1 refill pack?** The route is decided;
    the answer is not in yet. If they don't, §8's ordering plan needs revisiting.
-6. **`Chill Tub Filters`**: v3 counted 10 (4 new, 6 old) against a par of 1, and
-   the note says replace every 3 months. Is the count new filters only?
-7. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
+6. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
    Both were in confirmed surplus, so blank probably means "don't reorder" —
    worth making explicit rather than leaving an empty cell that reads as an
    oversight. Both are zero-rated for VAT if they ever enter a costed order.
-8. **Concept Spa's VAT basis** — the last unverified line, worth £15.00 of
+7. **Concept Spa's VAT basis** — the last unverified line, worth £15.00 of
    exposure. Newline's departure closed the other one.
