@@ -1,0 +1,36 @@
+product_name_raw,display_name,count_header,one_count_means,items_per_order_unit,order_unit,minimum_items,minimum_confirmed,basis_source
+toilet_rolls,Toilet Roll,Count (rolls),1 roll,6,pack of 6 rolls,24,yes,sheet Pack Size
+blue_rolls,Blue Roll (centrefeed),Count (rolls),1 roll,6,pack of 6 rolls,30,yes,sheet Pack Size
+multipurpose_cleaner,Multi-Surface Cleaner 5L,Count (5L bottles),1 5L bottle,1,single item,2,yes,sheet Pack Size
+hand_wash,Hand Wash 5L,Count (5L bottles),1 5L bottle,1,single item,2,yes,sheet Pack Size
+conditioner,Conditioner 5L,Count (5L bottles),1 5L bottle,1,single item,2,yes,sheet Pack Size
+moisturiser,Hand & Body Lotion 5L,Count (5L bottles),1 5L bottle,1,single item,3,yes,sheet Pack Size
+shampoo,Shampoo & Body Wash 5L,Count (5L bottles),1 5L bottle,1,single item,6,yes,sheet Pack Size
+hair_bands,Hair Bands,Count (bands),1 band,100,pack of 100 bands,100,yes,carried from live Supabase row - unverified
+chalk_block,Chalk Block,Count (blocks),1 block,8,pack of 8 blocks,16,no - do not sync,sheet Pack Size
+puly_caffe_cleaner,Coffee Machine Cleaner,Count (bottles),1 bottle,2,pack of 2 bottles,2,yes,sheet Pack Size
+tampons,Tampons,Count (tampons),1 tampon,64,pack of 64 tampons,,yes,sheet Pack Size
+pads,Sanitary Pads,Count (pads),1 pad,44,pack of 44 pads,,yes,sheet Pack Size
+d_batteries,D Batteries (Ergs),Count (batteries),1 batterie,8,pack of 8 batteries,10,yes,sheet Pack Size
+key_fobs,Key Fobs,Count (fobs),1 fob,,UNKNOWN,,yes,unknown
+blue_cloth,Blue Cloth Roll,Count (rolls),1 roll,6,pack of 6 rolls,12,no,override: sheet's 150 is sheets/roll; order unit is a 6-roll case
+chill_tubs_sanitiser,Ice Bath Sanitiser,Count (tubs),1 tub,20,pack of 20 tubs,40,no,sheet Pack Size
+chill_tub_filters,Ice Bath Filter,Count (filters),1 filter,1,single item,1,yes,sheet Pack Size
+wet_kit_bags,Wet Kit Bags,Count (bags),1 bag,250,pack of 250 bags,500,no - do not sync,sheet Pack Size
+bin_bags,Bin Bags 80L,Count (bags),1 bag,200,pack of 200 bags,200,yes,sheet Pack Size
+washing_up_liquid,Washing Up Liquid 5L,Count (5L bottles),1 5L bottle,1,single item,1,yes,sheet Pack Size
+water_softener_salt,Water Softener Salt,Count (bags),1 bag,,UNKNOWN,,no - do not sync,unknown
+urinal_shields,Urinal Shields,Count (shields),1 shield,10,pack of 10 shields,,yes,carried from live Supabase row - unverified
+blue_gloves_large,Nitrile Gloves (L),Count (gloves),1 glove,200,pack of 200 gloves,200,no,sheet Pack Size
+printer_ink_blk,Printer Ink - Black,Count (cartridges),1 cartridge,1,single item,1,yes,sheet Pack Size
+printer_ink_pink,Printer Ink - Pink,Count (cartridges),1 cartridge,1,single item,1,yes,sheet Pack Size
+printer_ink_blue,Printer Ink - Blue,Count (cartridges),1 cartridge,1,single item,1,yes,sheet Pack Size
+printer_ink_yellow,Printer Ink - Yellow,Count (cartridges),1 cartridge,1,single item,1,yes,sheet Pack Size
+paper_printer,Printer Paper,Count (reams),1 ream,,UNKNOWN,2,yes,unknown
+sure_deodorant_men,Deodorant - Men,Count (cans),1 can,6,pack of 6 cans,24,yes,sheet Pack Size
+sure_deodorant_women,Deodorant - Women,Count (cans),1 can,6,pack of 6 cans,24,yes,sheet Pack Size
+glade_sprays,Air Freshener Spray,Count (cans),1 can,4,pack of 4 cans,,yes,carried from live Supabase row - unverified
+microfibre_cloths,Microfibre Cloths,Count (cloths),1 cloth,12,pack of 12 cloths,12,yes,sheet Pack Size
+sanitiser_gel,Hand Sanitiser 5L,Count (5L bottles),1 5L bottle,1,single item,1,yes,sheet Pack Size
+pens,Pens,Count (pens),1 pen,,UNKNOWN,,yes,unknown
+notepads,Notepads,Count (pads),1 pad,,UNKNOWN,1,yes,unknown

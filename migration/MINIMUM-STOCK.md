@@ -1,5 +1,23 @@
 # How to work out the minimum stock
 
+> **The method here still stands; its inputs are gone.** See
+> [`PLAN-V4.md`](PLAN-V4.md).
+>
+> Two corrections to this document, established 2026-08-05:
+>
+> 1. **The 29/07 count is not real.** All 38 of its values are the number `6`.
+>    Every figure below that leans on it — the burn-rate table, the "40–60%
+>    understated" conclusion, the four burn-checked usage figures — has no
+>    measurement behind it. Treat them as removed, not merely uncertain.
+> 2. Three of the four burn-checked products (Sea Kelp hand wash, conditioner,
+>    lotion) no longer exist; they are Odyssey products from a different supplier.
+>
+> What survives, and is still the basis of the plan: minimum = **highest of four
+> candidates**; **burn rate ≠ consumption** because a delivery triggers a refill
+> round; **purchase rate is a floor**, not a measure, because ordering was
+> reactive; an **explicit human requirement wins outright**; and **count in
+> items, with the unit in the column header**.
+
 Short version: **you have already written it — it's the `Par Qty` column.** The
 job is to fill the gaps around it, not replace it.
 
