@@ -99,15 +99,18 @@ dashboard's location grouping changes meaning. Note `Greenspeed Techno Multi` is
 `Staff Room` on the Stock tab and `Cleaning` on the Product List — the two tabs
 disagree. Two columns (location + category) would settle this properly.
 
-### 5. First aid went from one line to sixteen
+### 5. First aid went from one line to sixteen — now counted
 
 The DB holds a single `hs_refills` (320-piece kit, £24.53) plus `ice_packs`. The
-sheet itemises 16 first-aid lines, all `Split between 4 boxes`, all with no cost
-and supplier `Amazon?`. They also have no stock counts.
+sheet itemises 16 first-aid lines, all `Split between 4 boxes`, with no cost and
+supplier `Amazon?`.
 
-These are consumption-tracked components of restock boxes, not order units. They
-will produce 14 new products with no price, no par and no count — every one
-flagged "order now" with a £0 suggested order.
+**Counted 2026-08-04** (all four boxes combined, individual items): 12 of 15 lines
+are short, 230 items in total, and the kits turn out to hold 35 distinct lines
+against a required list of 15. Full reconciliation in `FIRST-AID.md`.
+
+Still no pack sizes or prices, so the shortfall cannot yet become a costed order —
+a BS 8599-1 refill pack may be a better order unit than 15 separate components.
 
 ### 6. Counting unit conflicts with the schema — resolved
 
@@ -144,6 +147,7 @@ roll in rolls. **Decided: count in individual units throughout**, with
 | `products_tab_final.csv` | The canonical 52 products from the `Stock` tab, restructured for `Code.gs`, keys preserved, with `units_per_pack` / `count_unit` / `min_stock_units` / `order_up_to_units` added. |
 | `min_stock_model.csv` | The minimum-stock working for all 52 products: inputs, which candidate set the minimum, order-up-to level, implied cadence, count basis, per-row flags. |
 | `MINIMUM-STOCK.md` | How the minimum is worked out, and why. |
+| `FIRST-AID.md` | The 4-box first aid reconciliation: shortfalls, what the required list does and doesn't cover, and the two figures still unset. |
 | `BASELINE-RESET.md` | The plan to clear the slate at the next count, restock to a known level, and measure real usage from the weekly counts. Includes the reset order (£875) and what's readable when. |
 | `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. Still worth loading — the orders genuinely happened and `orders_between` needs them; it was only the demand inference that was unsafe. |
 
