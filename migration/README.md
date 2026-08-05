@@ -63,15 +63,23 @@ Recommended: keep the slug as the key, add a hidden `product_name_raw` column to
 the sheet (same pattern the `Stock Count` tab already uses), and let the full
 supplier description live in `order_link_or_desc` where it belongs.
 
-### 3. Cost column mixes VAT bases
+### 3. Cost column mixes VAT bases — resolved for 13 of 15 order lines
 
 The seven trade-supplier prices are **net ex-VAT** in the sheet and **gross** in
 the DB — exactly ×1.20 in every case, verified against the invoice tab. The
 Amazon prices are identical in both, i.e. VAT-inclusive retail.
 
-So the sheet's `Cost` column is currently net for Futures/Out of Eden and gross
-for Amazon. The shopping-list totals need one basis. Recommend **net ex-VAT
-throughout** (matches the invoices), which means dividing the Amazon figures.
+**Decided: net ex-VAT throughout**, matching the invoices. Applied line by line in
+`shopping_list.csv` (`VAT basis` column) and `SHOPPING-LIST.md`:
+
+| basis | lines | how established |
+|---|---|---|
+| net (verified) | 4 Futures + 1 Out of Eden | price matches an invoice line to the penny; the invoice tab states its figures are net |
+| gross (converted) | 7 Amazon + 2 from the old DB record | Amazon lists VAT-inclusive; the DB stores gross throughout |
+| **unverified** | **Newline, Concept Spa** | no invoice line, no DB price — nothing to check against |
+
+The reset order is therefore **£764.73 net / £917.67 gross**, not the mixed-basis
+£800.53 it was quoted at. The two unverified lines are worth £23.82 of uncertainty.
 
 Six prices have genuinely changed and should be taken from the sheet:
 
@@ -105,9 +113,10 @@ The DB holds a single `hs_refills` (320-piece kit, £24.53) plus `ice_packs`. Th
 sheet itemises 16 first-aid lines, all `Split between 4 boxes`, with no cost and
 supplier `Amazon?`.
 
-**Counted 2026-08-04** (all four boxes combined, individual items): 12 of 15 lines
-are short, 230 items in total, and the kits turn out to hold 35 distinct lines
-against a required list of 15. Full reconciliation in `FIRST-AID.md`.
+**Counted 2026-08-04** (all four boxes combined, individual items): 14 of 15 lines
+are short, 247 items in total, and the kits turn out to hold 35 distinct lines
+against a required list of 15. Full reconciliation in `FIRST-AID.md`, which also
+proposes a 31-line tracked list — awaiting a decision.
 
 Still no pack sizes or prices, so the shortfall cannot yet become a costed order —
 a BS 8599-1 refill pack may be a better order unit than 15 separate components.
@@ -148,7 +157,8 @@ roll in rolls. **Decided: count in individual units throughout**, with
 | `min_stock_model.csv` | The minimum-stock working for all 52 products: inputs, which candidate set the minimum, order-up-to level, implied cadence, count basis, per-row flags. |
 | `MINIMUM-STOCK.md` | How the minimum is worked out, and why. |
 | `FIRST-AID.md` | The 4-box first aid reconciliation: shortfalls, what the required list does and doesn't cover, and the two figures still unset. |
-| `BASELINE-RESET.md` | The plan to clear the slate at the next count, restock to a known level, and measure real usage from the weekly counts. Includes the reset order (£875) and what's readable when. |
+| `BASELINE-RESET.md` | The plan to clear the slate at the next count, restock to a known level, and measure real usage from the weekly counts. Includes the reset order (£764.73 net) and what's readable when. |
+| `SHOPPING-LIST.md` | The reset order by supplier, in packs, with the line-by-line VAT resolution. |
 | `deliveries_backfill.csv` | All 26 invoice lines as `shop_consumable_deliveries` rows, mapped to keys. 8 products, £1,659.59 net, Feb–Jul 2026. Still worth loading — the orders genuinely happened and `orders_between` needs them; it was only the demand inference that was unsafe. |
 
 ## Decisions taken (2026-08-04)
@@ -167,7 +177,8 @@ roll in rolls. **Decided: count in individual units throughout**, with
 ## Suggested sequence
 
 1. Agree the 9 flagged rows in `crosswalk.csv`.
-2. Settle the remaining schema question: VAT basis (net throughout recommended).
+2. ~~Settle the VAT basis.~~ **Done — net ex-VAT throughout.** Two lines (Newline,
+   Concept Spa) stay unverified until an invoice arrives; £23.82 of exposure.
 3. Rebuild the sheet's `Products` tab from `products_tab_final.csv`, adding a
    hidden `product_name_raw` column.
 4. Load `deliveries_backfill.csv` into `shop_consumable_deliveries` — that gives

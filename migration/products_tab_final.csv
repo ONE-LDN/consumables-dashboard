@@ -15,14 +15,14 @@ eye_pad_bandages,Eye Pad Bandages,First Aid,Amazon?,Eye Pad Bandages,,,unit,,8.0
 blue_plasters,Washproof Plasters,First Aid,Amazon?,Washproof Plasters,,1,unit,1,160.0,161,estimate,
 sterile_wipes,Sterile Wipes,First Aid,Amazon?,Sterile Wipes,,,unit,,80.0,,none,units_per_pack unknown; no monthly usage figure
 waterproof_tape,Waterproof Tape,First Aid,Amazon?,Waterproof Tape,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
-blue_gloves,Blue Gloves,First Aid,Amazon?,Blue Gloves,,,unit,,24.0,,none,units_per_pack unknown; no monthly usage figure
+blue_gloves,Blue Gloves,First Aid,Amazon?,Blue Gloves,,,unit,,24,,set by you,"requirement confirmed by Saffron as 24 INDIVIDUAL gloves (not 24 pairs); 12 on hand; units_per_pack unknown"
 finger_dressing,Finger Dressing,First Aid,Amazon?,Finger Dressing,,,unit,,8.0,,none,units_per_pack unknown; no monthly usage figure
 face_shield,Face Shield,First Aid,Amazon?,Face Shield,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
 foil_blankets,Foil Blankets,First Aid,Amazon?,Foil Blankets,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
 burn_dressing_10x10cm,Burn Dressing 10x10cm,First Aid,Amazon?,Burn Dressing 10x10cm,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
 clothing_cutters,Clothing Cutters,First Aid,Amazon?,Clothing Cutters,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
 conforming_bandages,Conforming Bandages,First Aid,Amazon?,Conforming Bandages,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
-ice_packs,Ice packs,First Aid,Amazon?,Ice packs,,24,unit,576,24,600,estimate,"par 24/mo implies 576 units/mo -> min 227.1, vs one pack of 24: par is probably in units not packs; no Par Qty set"
+ice_packs,Ice packs,First Aid,Amazon?,Ice packs,,24,unit,,16,,set by you,"requirement set to 16 by Saffron 2026-08-04; stored par of 24/mo implies 576 units/mo and is discarded as a unit mix-up; pack size of 24 comes from the old DB row and needs confirming"
 hair_bands,Hair Bands,FOH Desk,Amazon?,Hair Bands,,100,unit,100,100,200,estimate,"par 1/mo implies 100 units/mo -> min 39.4, vs Par Qty 1.0: par is probably in units not packs"
 chalk_block,Chalk Block,Gym Floor,Amazon,Strength Shop magnesium carbonate chalk - case of 8 blocks,,8,unit,16,8,24,estimate,"par 2/mo implies 16 units/mo -> min 6.3, vs Par Qty 2.0: par is probably in units not packs"
 puly_caffe_cleaner,Puly Caffe Cleaner,Cafe,Amazon,Puly Caffe Cleaner,,2,unit,4,2.0,6,estimate,

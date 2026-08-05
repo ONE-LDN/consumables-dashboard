@@ -1,54 +1,59 @@
-Status,Supplier,Item,Category,Unit,Have (items),Min (items),Order (packs),Pack size,Arriving (items),Unit cost £,Line total £,Note
-ORDER,Amazon,Bin bags,Staff Room,bags,100,210.2,2,200,400,16.62,33.24,
-ORDER,Amazon,Blue Gloves Large,Staff Room,gloves,0,100,2,100,200,3.41,6.82,
-ORDER,Amazon,Blue cloth,Cafe,rolls,0,6,2,6,12,11.98,23.96,
-ORDER,Amazon,Microfibre Cloths,,cloths,,12,2,12,24,9.49,18.98,
-ORDER,Amazon,Puly Caffe Cleaner,Cafe,bottles,0.5,2,2,2,4,21.47,42.94,
-ORDER,Amazon,Urinal case,Toiletries,shields,0,10,2,10,20,14.95,29.90,"price from old record, VAT-inclusive"
-ORDER,Amazon,Washing up liquid,Cafe,5L bottles,0.5,1,2,1,2,11.87,23.74,
-ORDER,Concept Spa,Chill Tubs Sanitiser,Toiletries,tubs,3,23.7,3,20,60,15.00,45.00,
-ORDER,Futures Supplies,2ply Blue Embossed C/feed Roll 150m 96711,Gym Floor,rolls,20,30,7,6,42,11.31,79.17,
-ORDER,Futures Supplies,Hand sanitiser,Toiletries,5L bottles,1,1.1,2,1,2,17.62,35.24,"price from old record, VAT-inclusive"
-ORDER,Futures Supplies,Sea Kelp Liquid Hand Wash Refill 5L,Toiletries,5L bottles,0,2,3,1,3,29.12,87.36,
-ORDER,Futures Supplies,Sea Kelp Luxury Conditioner Refill 5L,Toiletries,5L bottles,1,2,2,1,2,29.12,58.24,
-ORDER,Futures Supplies,Sea Kelp Luxury Hand & Body Lotion 5L Refill (Moisturiser),Toiletries,5L bottles,3,3,1,1,1,29.12,29.12,
-ORDER,Newline,Wet kit bag,Toiletries,rolls,3,20,2,20,40,48.96,97.92,
-ORDER,Out of Eden,Odyssey Black Pepper & Sandalwood Shampoo & Body Wash 5L,Toiletries,5L bottles,3,6,10,1,10,18.89,188.90,
-ORDER,TBC,Deodorant - Men,Toiletries,cans,0,24,5,6,30,,,
-ORDER,TBC,Deodorant - Women,Toiletries,cans,0,24,5,6,30,,,
-HOLD,Amazon,Chalk Block,Gym Floor,blocks,8,8,,8,,15.99,,usage figure known wrong - set from Tuesday count
-HOLD,Amazon,D Batteries (Ergs),FOH Desk,batteries,5,10,,8,,15.99,,usage figure known wrong - set from Tuesday count
-HOLD,Amazon,Notepads,FOH Desk,items,,1,,,,,,pack size unknown
-HOLD,Amazon,Paper - printer,FOH Desk,items,,2,,,,,,pack size unknown
-HOLD,Amazon,Pens,FOH Desk,items,12,,,,,,,no minimum and no pack size
-HOLD,Amazon?,Blue Gloves,First Aid,items,,24,,,,,,pack size unknown
-HOLD,Amazon?,Burn Dressing 10x10cm,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Clothing Cutters,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Conforming Bandages,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Eye Pad Bandages,First Aid,items,,8,,,,,,pack size unknown
-HOLD,Amazon?,Face Shield,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Finger Dressing,First Aid,items,,8,,,,,,pack size unknown
-HOLD,Amazon?,First Aid Dressing 12x12cm,First Aid,items,,8,,,,,,pack size unknown
-HOLD,Amazon?,First Aid Dressing 18x18cm,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Foil Blankets,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Amazon?,Hair Bands,FOH Desk,bands,0,100,,100,,3.99,,usage figure known wrong - set from Tuesday count
-HOLD,Amazon?,Ice packs,First Aid,items,,24,,24,,,,usage figure known wrong - set from Tuesday count
-HOLD,Amazon?,Safety Pins,First Aid,items,,48,,,,,,pack size unknown
-HOLD,Amazon?,Sterile Wipes,First Aid,items,,80,,,,,,pack size unknown
-HOLD,Amazon?,Triangular Bandages,First Aid,items,,8,,,,,,pack size unknown
-HOLD,Amazon?,Washproof Plasters,First Aid,items,,160,,,,,,pack size unknown
-HOLD,Amazon?,Waterproof Tape,First Aid,items,,4,,,,,,pack size unknown
-HOLD,Futures Supplies,Sea Kelp Luxury Shampoo 5L Refill,Toiletries,5L bottles,,2,,,,29.12,,pack size unknown
-HOLD,TBC,Glade airfreshner sparys,Toiletries,cans,,4,,4,,,,count basis still unknown
-MEASURE,Amazon,Printer Ink - Black,FOH Desk,items,1,1,,1,,,,New stock just arrived - count weekly to learn how long a set lasts
-MEASURE,Amazon,Printer Ink - Blue,FOH Desk,items,1,1,,1,,,,New stock just arrived - count weekly to learn how long a set lasts
-MEASURE,Amazon,Printer Ink - Pink,FOH Desk,items,1,1,,1,,,,New stock just arrived - count weekly to learn how long a set lasts
-MEASURE,Amazon,Printer Ink - Yellow,FOH Desk,items,1,1,,1,,,,New stock just arrived - count weekly to learn how long a set lasts
-MEASURE,TBC,Key Fobs,FOH Desk,fobs,0,1,,1,,,,"Handled separately - count it, do not order"
-OVERSTOCKED,Amazon,Sanitary Pads,Toiletries,pads,484,44,,44,,7.99,,11.0x minimum - confirmed by you
-OVERSTOCKED,Amazon,Tampons,Toiletries,tampons,256,64,,64,,17.28,,4.0x minimum - confirmed by you
-OVERSTOCKED,Concept Spa,Chill Tub Filters,Toiletries,filters,10,1.6,,1,,20.00,,6.2x minimum
-OVERSTOCKED,Futures Supplies,Greenspeed Techno Multi - Single 5L (Multi Surface Cleaner),Staff Room,5L bottles,2.5,2,,1,,14.23,,1.2x minimum
-OVERSTOCKED,Futures Supplies,"Jumbo T.Roll 2ply 2.25"" Core J26300 300m",Toiletries,rolls,27,24,,6,,17.52,,1.1x minimum
-OVERSTOCKED,Halite,Water Softener Salt,Plant room,bags,36,10,,10,,149.99,,3.6x minimum - confirmed by you
-,,,,,,,,,,TOTAL,800.53,"orders only, where prices are known"
+Status,Supplier,Item,Category,Unit,Have (items),Min (items),Order (packs),Pack size,Arriving (items),Unit cost £ (as listed),VAT basis,Unit cost net £,Line total net £,Line total gross £,Note
+ORDER,Amazon,Bin bags,Staff Room,bags,100,210.2,2,200,400,16.62,gross - VAT-inclusive - convert before totalling,13.85,27.70,33.24,
+ORDER,Amazon,Blue Gloves Large,Staff Room,gloves,0,100,2,100,200,3.41,gross - VAT-inclusive - convert before totalling,2.84,5.68,6.82,
+ORDER,Amazon,Blue cloth,Cafe,rolls,0,6,2,6,12,11.98,gross - VAT-inclusive - convert before totalling,9.98,19.97,23.96,
+ORDER,Amazon,Microfibre Cloths,,cloths,,12,2,12,24,9.49,gross - VAT-inclusive - convert before totalling,7.91,15.82,18.98,
+ORDER,Amazon,Puly Caffe Cleaner,Cafe,bottles,0.5,2,2,2,4,21.47,gross - VAT-inclusive - convert before totalling,17.89,35.78,42.94,
+ORDER,Amazon,Urinal case,Toiletries,shields,0,10,2,10,20,14.95,gross - VAT-inclusive - convert before totalling,12.46,24.92,29.90,"price from old record, VAT-inclusive"
+ORDER,Amazon,Washing up liquid,Cafe,5L bottles,0.5,1,2,1,2,11.87,gross - VAT-inclusive - convert before totalling,9.89,19.78,23.74,
+ORDER,Concept Spa,Chill Tubs Sanitiser,Toiletries,tubs,3,23.7,3,20,60,15.00,unknown - NOT VERIFIED - ask the supplier,15.00,45.00,54.00,
+ORDER,Futures Supplies,2ply Blue Embossed C/feed Roll 150m 96711,Gym Floor,rolls,20,30,7,6,42,11.31,net - verified - matches an invoice line,11.31,79.17,95.00,
+ORDER,Futures Supplies,Hand sanitiser,Toiletries,5L bottles,1,1.1,2,1,2,17.62,gross - VAT-inclusive - convert before totalling,14.68,29.37,35.24,"price from old record, VAT-inclusive"
+ORDER,Futures Supplies,Sea Kelp Liquid Hand Wash Refill 5L,Toiletries,5L bottles,0,2,3,1,3,29.12,net - verified - matches an invoice line,29.12,87.36,104.83,
+ORDER,Futures Supplies,Sea Kelp Luxury Conditioner Refill 5L,Toiletries,5L bottles,1,2,2,1,2,29.12,net - verified - matches an invoice line,29.12,58.24,69.89,
+ORDER,Futures Supplies,Sea Kelp Luxury Hand & Body Lotion 5L Refill (Moisturiser),Toiletries,5L bottles,3,3,1,1,1,29.12,net - verified - matches an invoice line,29.12,29.12,34.94,
+ORDER,Newline,Wet kit bag,Toiletries,rolls,3,20,2,20,40,48.96,unknown - NOT VERIFIED - ask the supplier,48.96,97.92,117.50,
+ORDER,Out of Eden,Odyssey Black Pepper & Sandalwood Shampoo & Body Wash 5L,Toiletries,5L bottles,3,6,10,1,10,18.89,net - verified - matches an invoice line,18.89,188.90,226.68,
+ORDER,TBC,Deodorant - Men,Toiletries,cans,0,24,5,6,30,,,,,,
+ORDER,TBC,Deodorant - Women,Toiletries,cans,0,24,5,6,30,,,,,,
+HOLD,Amazon,Chalk Block,Gym Floor,blocks,8,8,,8,,15.99,,,,,usage figure known wrong - set from Tuesday count
+HOLD,Amazon,D Batteries (Ergs),FOH Desk,batteries,5,10,,8,,15.99,,,,,usage figure known wrong - set from Tuesday count
+HOLD,Amazon,Notepads,FOH Desk,items,,1,,,,,,,,,pack size unknown
+HOLD,Amazon,Paper - printer,FOH Desk,items,,2,,,,,,,,,pack size unknown
+HOLD,Amazon,Pens,FOH Desk,items,12,,,,,,,,,,no minimum and no pack size
+HOLD,Amazon?,Blue Gloves,First Aid,items,,24,,,,,,,,,pack size unknown
+HOLD,Amazon?,Burn Dressing 10x10cm,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Clothing Cutters,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Conforming Bandages,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Eye Pad Bandages,First Aid,items,,8,,,,,,,,,pack size unknown
+HOLD,Amazon?,Face Shield,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Finger Dressing,First Aid,items,,8,,,,,,,,,pack size unknown
+HOLD,Amazon?,First Aid Dressing 12x12cm,First Aid,items,,8,,,,,,,,,pack size unknown
+HOLD,Amazon?,First Aid Dressing 18x18cm,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Foil Blankets,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Amazon?,Hair Bands,FOH Desk,bands,0,100,,100,,3.99,,,,,usage figure known wrong - set from Tuesday count
+HOLD,Amazon?,Ice packs,First Aid,items,11,16,,24,,,,,,,"set by you to 16, 11 on hand - short 5. Pack of 24 is from the old DB record, so one pack overshoots to 35: confirm the pack size first"
+HOLD,Amazon?,Safety Pins,First Aid,items,,48,,,,,,,,,pack size unknown
+HOLD,Amazon?,Sterile Wipes,First Aid,items,,80,,,,,,,,,pack size unknown
+HOLD,Amazon?,Triangular Bandages,First Aid,items,,8,,,,,,,,,pack size unknown
+HOLD,Amazon?,Washproof Plasters,First Aid,items,,160,,,,,,,,,pack size unknown
+HOLD,Amazon?,Waterproof Tape,First Aid,items,,4,,,,,,,,,pack size unknown
+HOLD,Futures Supplies,Sea Kelp Luxury Shampoo 5L Refill,Toiletries,5L bottles,,2,,,,29.12,,,,,pack size unknown
+HOLD,TBC,Glade airfreshner sparys,Toiletries,cans,,4,,4,,,,,,,count basis still unknown
+MEASURE,Amazon,Printer Ink - Black,FOH Desk,items,1,1,,1,,,,,,,New stock just arrived - count weekly to learn how long a set lasts
+MEASURE,Amazon,Printer Ink - Blue,FOH Desk,items,1,1,,1,,,,,,,New stock just arrived - count weekly to learn how long a set lasts
+MEASURE,Amazon,Printer Ink - Pink,FOH Desk,items,1,1,,1,,,,,,,New stock just arrived - count weekly to learn how long a set lasts
+MEASURE,Amazon,Printer Ink - Yellow,FOH Desk,items,1,1,,1,,,,,,,New stock just arrived - count weekly to learn how long a set lasts
+MEASURE,TBC,Key Fobs,FOH Desk,fobs,0,1,,1,,,,,,,"Handled separately - count it, do not order"
+OVERSTOCKED,Amazon,Sanitary Pads,Toiletries,pads,484,44,,44,,7.99,,,,,11.0x minimum - confirmed by you
+OVERSTOCKED,Amazon,Tampons,Toiletries,tampons,256,64,,64,,17.28,,,,,4.0x minimum - confirmed by you
+OVERSTOCKED,Concept Spa,Chill Tub Filters,Toiletries,filters,10,1.6,,1,,20.00,,,,,6.2x minimum
+OVERSTOCKED,Futures Supplies,Greenspeed Techno Multi - Single 5L (Multi Surface Cleaner),Staff Room,5L bottles,2.5,2,,1,,14.23,,,,,1.2x minimum
+OVERSTOCKED,Futures Supplies,"Jumbo T.Roll 2ply 2.25"" Core J26300 300m",Toiletries,rolls,27,24,,6,,17.52,,,,,1.1x minimum
+OVERSTOCKED,Halite,Water Softener Salt,Plant room,bags,36,10,,10,,149.99,,,,,3.6x minimum - confirmed by you
+,,,,,,,,,,,,,,,
+,,TOTAL - verified basis (13 lines),,,,,,,,,,,621.81,746.17,
+,,"TOTAL - unverified basis (2 lines, read as net)",,,,,,,,,,,142.92,171.50,
+,,TOTAL - all 15 priced order lines,,,,,,,,,,,764.73,917.67,
+,,"TOTAL - if the 2 unverified lines are gross, not net",,,,,,,,,,,740.91,889.09,
+,,"Not in any total: Deodorant Men x5, Women x5 - no price anywhere",,,,,,,,,,,,,

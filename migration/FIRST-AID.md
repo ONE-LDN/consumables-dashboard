@@ -1,6 +1,8 @@
 # First aid reconciliation — 2026-08-04
 
-Counted stock reconciled against the required list. **12 of 15 lines are short.**
+Counted stock reconciled against the required list. **14 of 15 lines are short,
+247 individual items** (12 from the count itself, plus gloves and ice packs once
+their requirements were set).
 
 ## What was confirmed alongside the count
 
@@ -70,7 +72,7 @@ safety pins.
 
 Worth checking before buying piecemeal: BS 8599-1 refill packs exist and are sold
 as a single item covering most of these components at once. If the existing kits
-are to that standard, one refill pack per box may cover the majority of the 230
+are to that standard, one refill pack per box may cover the majority of the 247
 items in one purchase — and would also give the first-aid group a single sensible
 order unit instead of 15 untracked components. Worth a look at whoever supplies
 the kits before ordering 12 Amazon lines.

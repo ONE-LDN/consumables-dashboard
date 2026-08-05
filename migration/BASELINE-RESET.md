@@ -43,9 +43,14 @@ material:
 
 | rule | reset order |
 |---|---|
-| minimum + one month of usage, everywhere | £2,828.94 |
-| the rule above, sized on the burn rate | £752.01 |
-| **the rule above, sized on the purchase floor** | **£800.53** |
+| minimum + one month of usage, everywhere | ~£2,830 |
+| the rule above, sized on the burn rate | ~£750 |
+| **the rule above, sized on the purchase floor** | **£764.73 net / £917.67 gross** |
+
+The first two are the mixed-basis figures they were originally quoted at, kept only
+to show the shape of the difference — they haven't been restated on a single VAT
+basis, because only the chosen rule became a real order. See `SHOPPING-LIST.md` for
+the line-by-line VAT resolution.
 
 The naive rule wanted 11 packs of water softener salt at £149.99 (£1,650), driven by
 a par of 10 packs/month that is one of the seven known to be wrong. Saffron has since
@@ -57,19 +62,23 @@ bags on hand against a note saying 6 packs fill the tub.
 Indicative — real quantities come from Tuesday's count. Full detail in
 `SHOPPING-LIST.md` and `shopping_list.csv`.
 
-| supplier | lines | cost |
+| supplier | lines | cost (net ex-VAT) |
 |---|---|---|
-| Futures Supplies | blue roll ×7, hand wash ×3, conditioner ×2, moisturiser ×1, hand sanitiser ×2 | £289.13 |
+| Futures Supplies | blue roll ×7, hand wash ×3, conditioner ×2, moisturiser ×1, hand sanitiser ×2 | £283.26 |
 | Out of Eden | Odyssey shampoo ×10 | £188.90 |
-| Amazon | bin bags ×2, blue gloves ×2, blue cloth ×2, microfibre ×2, Puly ×2, urinal shields ×2, washing up liquid ×2 | £179.58 |
-| Newline | wet kit bag ×2 | £97.92 |
-| Concept Spa | chill tubs sanitiser ×3 | £45.00 |
+| Amazon | bin bags ×2, blue gloves ×2, blue cloth ×2, microfibre ×2, Puly ×2, urinal shields ×2, washing up liquid ×2 | £149.65 |
+| Newline | wet kit bag ×2 | £97.92 *(basis unverified)* |
+| Concept Spa | chill tubs sanitiser ×3 | £45.00 *(basis unverified)* |
 | *(price TBC)* | deodorants ×5 each | — |
-| **17 lines, total where priced** | | **£800.53** |
+| **17 lines, total where priced** | | **£764.73 net / £917.67 gross** |
 
-Mixed VAT basis — net for the trade suppliers, gross for Amazon and for the two
-prices taken from the old record. Settle that before treating the total as a budget
-figure.
+**VAT is now settled for 13 of the 15 priced lines**, so this is a budget figure
+rather than the mixed-basis £800.53 it was quoted at before. Verified net for
+Futures and Out of Eden (matched to invoice lines to the penny); converted from
+gross for Amazon and the two prices taken from the old DB record. Newline and
+Concept Spa can't be checked against anything and are read as net — if they turn out
+to be gross the total drops to £740.91 net. **The ambiguity is worth £23.82**, so
+it isn't a reason to hold the order. Full working in `SHOPPING-LIST.md`.
 
 **Don't restock these 6** — already above minimum: pads (11×), water softener salt
 (3.6×, confirmed), tampons (4×), chill tub filters (6.3×), toilet roll (1.1×),
@@ -135,6 +144,6 @@ month.
 The resulting order is in `SHOPPING-LIST.md`.
 
 One thing worth deciding up front: whether the reset order goes in as a single
-purchase or is split across two weeks. ~£700–900 in one go is a cash-flow question,
+purchase or is split across two weeks. £918 gross in one go is a cash-flow question,
 not a data question — splitting it costs you nothing analytically as long as every
 delivery is logged.
