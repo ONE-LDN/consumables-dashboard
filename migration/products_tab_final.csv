@@ -1,0 +1,53 @@
+product_name_raw,display_name,location,supplier,order_link_or_desc,price_per_pack_gbp,units_per_pack,count_unit,monthly_usage_units,min_stock_units,order_up_to_units,usage_source,_review
+toilet_rolls,"Jumbo T.Roll 2ply 2.25"" Core J26300 300m",Toiletries,Futures Supplies,"Jumbo T.Roll 2ply 2.25"" Core J26300 300m",,6,unit,33.5,24.0,60,invoice-measured,
+blue_rolls,2ply Blue Embossed C/feed Roll 150m 96711,Gym Floor,Futures Supplies,2ply Blue Embossed C/feed Roll 150m 96711,,6,unit,29.8,30.0,60,invoice-measured,
+multipurpose_cleaner,Greenspeed Techno Multi - Single 5L (Multi Surface Cleaner),Staff Room,Futures Supplies,5L.,,1,unit,0.4,2.0,3,invoice-measured,
+hand_wash,Sea Kelp Liquid Hand Wash Refill 5L,Toiletries,Futures Supplies,5L,,1,unit,0.8,2.0,3,invoice-measured,
+sea_kelp_luxury_shampoo_5l_refill,Sea Kelp Luxury Shampoo 5L Refill,Toiletries,Futures Supplies,Sea Kelp Luxury Shampoo 5L Refill,,,unit,,2.0,,none,units_per_pack unknown; no monthly usage figure
+conditioner,Sea Kelp Luxury Conditioner Refill 5L,Toiletries,Futures Supplies,5L,,1,unit,0.6,2.0,3,invoice-measured,
+moisturiser,Sea Kelp Luxury Hand & Body Lotion 5L Refill (Moisturiser),Toiletries,Futures Supplies,5L,,1,unit,0.6,3.0,4,invoice-measured,
+shampoo,Odyssey Black Pepper & Sandalwood Shampoo & Body Wash 5L,Toiletries,Out of Eden,Odyssey Black Pepper & Sandalwood Shampoo & Body Wash 5L,,1,unit,6.4,6.0,13,invoice-measured,
+first_aid_dressing_12x12cm,First Aid Dressing 12x12cm,First Aid,Amazon?,First Aid Dressing 12x12cm,,,unit,,8.0,,none,units_per_pack unknown; no monthly usage figure
+first_aid_dressing_18x18cm,First Aid Dressing 18x18cm,First Aid,Amazon?,First Aid Dressing 18x18cm,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+triangular_bandages,Triangular Bandages,First Aid,Amazon?,Triangular Bandages,,,unit,,8.0,,none,units_per_pack unknown; no monthly usage figure
+safety_pins,Safety Pins,First Aid,Amazon?,Safety Pins,,,unit,,48.0,,none,units_per_pack unknown; no monthly usage figure
+eye_pad_bandages,Eye Pad Bandages,First Aid,Amazon?,Eye Pad Bandages,,,unit,,8.0,,none,units_per_pack unknown; no monthly usage figure
+blue_plasters,Washproof Plasters,First Aid,Amazon?,Washproof Plasters,,1,unit,1,160.0,161,estimate,
+sterile_wipes,Sterile Wipes,First Aid,Amazon?,Sterile Wipes,,,unit,,80.0,,none,units_per_pack unknown; no monthly usage figure
+waterproof_tape,Waterproof Tape,First Aid,Amazon?,Waterproof Tape,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+blue_gloves,Blue Gloves,First Aid,Amazon?,Blue Gloves,,,unit,,24,,set by you,"requirement confirmed by Saffron as 24 INDIVIDUAL gloves (not 24 pairs); 12 on hand; units_per_pack unknown"
+finger_dressing,Finger Dressing,First Aid,Amazon?,Finger Dressing,,,unit,,8.0,,none,units_per_pack unknown; no monthly usage figure
+face_shield,Face Shield,First Aid,Amazon?,Face Shield,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+foil_blankets,Foil Blankets,First Aid,Amazon?,Foil Blankets,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+burn_dressing_10x10cm,Burn Dressing 10x10cm,First Aid,Amazon?,Burn Dressing 10x10cm,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+clothing_cutters,Clothing Cutters,First Aid,Amazon?,Clothing Cutters,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+conforming_bandages,Conforming Bandages,First Aid,Amazon?,Conforming Bandages,,,unit,,4.0,,none,units_per_pack unknown; no monthly usage figure
+ice_packs,Ice packs,First Aid,Amazon?,Ice packs,,24,unit,,16,,set by you,"requirement set to 16 by Saffron 2026-08-04; stored par of 24/mo implies 576 units/mo and is discarded as a unit mix-up; pack size of 24 comes from the old DB row and needs confirming"
+hair_bands,Hair Bands,FOH Desk,Amazon?,Hair Bands,,100,unit,100,100,200,estimate,"par 1/mo implies 100 units/mo -> min 39.4, vs Par Qty 1.0: par is probably in units not packs"
+chalk_block,Chalk Block,Gym Floor,Amazon,Strength Shop magnesium carbonate chalk - case of 8 blocks,,8,unit,16,8,24,estimate,"par 2/mo implies 16 units/mo -> min 6.3, vs Par Qty 2.0: par is probably in units not packs"
+puly_caffe_cleaner,Puly Caffe Cleaner,Cafe,Amazon,Puly Caffe Cleaner,,2,unit,4,2.0,6,estimate,
+tampons,Tampons,Toiletries,Amazon,Flo Organic Cotton Applicator Regular Tampons - 64 Bulk Pack,,64,unit,384,64.0,448,estimate,"par 6/mo implies 384 units/mo -> min 201.8, vs Par Qty 64.0: par is probably in units not packs"
+pads,Sanitary Pads,Toiletries,Amazon,Flo Bamboo Day Period Pads - 44 Pads Bulk Pack,,44,unit,264,44.0,308,estimate,"par 6/mo implies 264 units/mo -> min 138.8, vs Par Qty 44.0: par is probably in units not packs"
+d_batteries,D Batteries (Ergs),FOH Desk,Amazon,"KODAK D Cell Alkaline Batteries (8 Pack) D Size Battery, LR20 1.5V",,8,unit,64,10,80,estimate,"par 8/mo implies 64 units/mo -> min 25.2, vs Par Qty 8.0: par is probably in units not packs"
+key_fobs,Key Fobs,FOH Desk,,Key Fobs,,1,unit,1,1,2,estimate,no Par Qty set
+blue_cloth,Blue cloth,Cafe,Amazon,"J Cloth Roll，Cleaning Cloth Roll，Soft and Quick-Drying can Be Used Repeatedly，6 Blue Cloth Rolls,150 Sheets,Blue.",,6,unit,6,6.0,12,estimate,
+chill_tubs_sanitiser,Chill Tubs Sanitiser,Toiletries,Concept Spa,tubs,,20,unit,60,33.5,100,estimate,Par Qty 20.0 is BELOW the calculated 33.5 - raise it
+chill_tub_filters,Chill Tub Filters,Toiletries,Concept Spa,4 new ones.,,1,unit,4,2.2,7,estimate,Par Qty 1.0 is BELOW the calculated 2.2 - raise it
+wet_kit_bags,Wet kit bag,Toiletries,Newline,Wet kit bag,,20,unit,10.0,20.0,40,estimate,
+bin_bags,Bin bags,Staff Room,Amazon,DCS 200 heavy duty bin bags 80L,,200,unit,400,210.2,800,estimate,Par Qty 200.0 is BELOW the calculated 210.2 - raise it
+washing_up_liquid,Washing up liquid,Cafe,Amazon,Ecover washing up liquid 5L,,1,unit,1,1.0,2,estimate,
+water_softener_salt,Water Softener Salt,Plant room,Halite,6 packs to fill tub.,,10,unit,100,10.0,110,estimate,"par 10/mo implies 100 units/mo -> min 55.8, vs Par Qty 10.0: par is probably in units not packs"
+urinal_shields,Urinal case,Toiletries,Amazon,Urinal case,,10,unit,2.0,10,20,estimate,no Par Qty set
+blue_gloves_large,Blue Gloves Large,Staff Room,Amazon,Blue Nitrile disposable gloves L (8.5),,100,unit,200,100,300,estimate,no Par Qty set
+printer_ink_blk,Printer Ink - Black,FOH Desk,Amazon,Sodface,,1,unit,1,1.0,2,estimate,
+printer_ink_pink,Printer Ink - Pink,FOH Desk,Amazon,Sodface,,1,unit,1,1.0,2,estimate,
+printer_ink_blue,Printer Ink - Blue,FOH Desk,Amazon,Sodface,,1,unit,1,1.0,2,estimate,
+printer_ink_yellow,Printer Ink - Yellow,FOH Desk,Amazon,Sodface,,1,unit,1,1.0,2,estimate,
+paper_printer,Paper - printer,FOH Desk,Amazon,Paper - printer,,,unit,,2.0,,none,units_per_pack unknown; no monthly usage figure
+sure_deodorant_men,Deodorant - Men,Toiletries,,Deodorant - Men,,6,unit,6,24.0,30,estimate,
+sure_deodorant_women,Deodorant - Women,Toiletries,,Deodorant - Women,,6,unit,6,24.0,30,estimate,
+glade_sprays,Glade airfreshner sparys,Toiletries,,Glade airfreshner sparys,,4,unit,4,4,8,estimate,no Par Qty set
+microfibre_cloths,Microfibre Cloths,,Amazon,MR.SIGA microfibre cloths pack of 12,,12,unit,12,12.0,24,estimate,no category
+sanitiser_gel,Hand sanitiser,Toiletries,,5L.,,1,unit,2,1.4,4,estimate,no Par Qty set
+pens,Pens,FOH Desk,Amazon,Pens,,,unit,,,,none,no Par Qty set; units_per_pack unknown; no monthly usage figure
+notepads,Notepads,FOH Desk,Amazon,Notepads,,,unit,,1,,none,no Par Qty set; units_per_pack unknown; no monthly usage figure
