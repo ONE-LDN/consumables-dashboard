@@ -36,7 +36,9 @@ line was 62 *over*; read as blue detectable it is the largest gap in the kit.
 | Face Shield | 4 | 3 | **1** | 2x resus + 1x CPR shield counted together |
 | Foil Blankets | 4 | 3 | **1** | first aid blanket excluded — different item |
 
-**230 individual items across 12 lines**, before gloves.
+Plus **Blue Gloves 12** (24 needed, 12 held) and **Ice packs 5** (16 needed, 11 held).
+
+**14 lines short, 247 individual items.**
 
 ### At or over requirement
 
@@ -45,23 +47,19 @@ line was 62 *over*; read as blue detectable it is the largest gap in the kit.
 | Triangular Bandages | 8 | 12 | +4 (two sizes: 8× 90×90×127, 4× 96×96×136) |
 | Eye Pad Bandages | 8 | 23 | +15 |
 
-## Two things this cannot resolve on its own
+## Both settled
 
-**Gloves — 24 of what?** You have 6 pairs. The requirement says 24 but not whether
-that's gloves or pairs:
+- **Gloves: the requirement of 24 means 24 individual gloves.** You have 6 pairs =
+  12 gloves, so **order 12**.
+- **Ice packs: requirement set to 16.** You have 11, so **order 5**.
 
-| reading | have | order |
-|---|---|---|
-| 24 individual gloves | 12 | 12 gloves |
-| 24 pairs | 6 pairs | 18 pairs (36 gloves) |
+The ice pack setting exposed a flaw worth recording: the model returned 16 → 24,
+because the "one pack" floor (a pack of ice packs is 24) overrode the figure you'd
+just chosen. That floor exists to stop an *inferred* minimum landing below a
+purchasable quantity — it has no business overruling a number a human set on
+purpose. **An explicit requirement now wins outright.**
 
-Across four boxes that's either 6 gloves or 6 pairs per box — both plausible. The
-model currently holds the first reading; change it if that's wrong.
-
-**Ice packs have no requirement.** 11 on hand across four boxes, so roughly 3 each.
-The model shows a minimum of 24, but that is an artifact of falling back to pack
-size when no requirement exists — **not a figure anyone chose.** 12 (3 per box) or
-16 (4 per box) both fit what's there. Your call.
+With both in, the first aid gap is **14 lines short, 247 items**.
 
 ## Pack sizes are the blocker for ordering
 
@@ -76,6 +74,66 @@ are to that standard, one refill pack per box may cover the majority of the 230
 items in one purchase — and would also give the first-aid group a single sensible
 order unit instead of 15 untracked components. Worth a look at whoever supplies
 the kits before ordering 12 Amazon lines.
+
+# Proposed tracked list — 15 lines to 31
+
+The 20 unlisted items need a home. Your own decisions set the rule: you accepted
+**Triangular Bandages** as two sizes combined and **Face Shield** as resus + CPR
+shield combined, but rejected crepe-as-conforming, scissors-as-cutters and
+adhesive-as-waterproof. So: **merge size and brand variants of the same item; never
+merge different items.**
+
+## A. Merge these — size and brand variants of one item
+
+| proposed line | merges | on hand | why |
+|---|---|---|---|
+| **Gauze Swabs / Non-Woven Compress** | 4 lines: 10x10cm, 7.5x7.5cm, 5x5cm, 5.5x7.5cm | **14** | four sizes of the same product - same precedent as triangular bandages |
+| **Adhesive Bandages / Plasters (non-detectable)** | 4 lines: 7.2x1.9cm, mixed pack of 82, 7.2x2.5cm, mixed dressings pack of 20 | **222** | 222 items currently invisible - NOT the blue detectable line |
+| **Elastic Bandages** | 2 lines: 7.5cm x 4.5m, 10cm x 4m | **4** | two widths of the same product |
+| **Cotton Wool (pads / balls)** | 3 lines: cotton pads, cotton wool balls, compress 10x balls | **4** | same purpose, three formats - cotton TIPS kept separate, different job |
+
+13 count lines collapse into 4 tracked lines.
+
+## B. Add as their own line — genuinely different items
+
+| proposed line | on hand | why |
+|---|---|---|
+| Crepe Cotton Bandages | 4 | kept separate from Conforming - your call |
+| Sterile Eye Wash Pod | 2 | nothing else covers eye irrigation |
+| Emergency Burn Gel | 1 | distinct from Burn Dressing |
+| First Aid Blanket | 1 | distinct from Foil Blanket |
+| Vinyl Gloves | 2 | distinct from Blue Nitrile |
+| Low Absorbent / Non-Adherent Dressing 10x10cm | 1 | wound contact layer, not a gauze swab |
+| Cotton Tips | 1 | applicator, not a cleaning pad |
+| Plaster Sheet | 1 | cut-to-size format |
+| Adhesive Tape | 2 | you ruled this out as Waterproof Tape - so it is its own item |
+
+## C. Equipment, not consumables — count, never reorder
+
+These don't get used up; they go missing. A monthly usage figure is meaningless
+for them, same as the printer ink and key fobs.
+
+| item | required | on hand | note |
+|---|---|---|---|
+| Clothing Cutters | 4 | 0 | moves OFF the reorder list |
+| Tourniquet | — | 1 |  |
+| Tweezers | — | 1 |  |
+| Safety Scissors | — | 1 | orphaned when you ruled it out as Clothing Cutters |
+
+## The shape it lands in
+
+| | lines |
+|---|---|
+| physical lines on your count sheet | 41 |
+| distinct items | 35 |
+| **proposed tracked list** | **31** |
+| of which reorderable consumables | 27 |
+| of which equipment (check present only) | 4 |
+
+So it goes from 15 lines that miss 20 real items, to 31 lines that cover
+everything — while adding only 16 rows, because 9 of the count lines
+collapse into merged ones.
+
 
 ## The 222 beige adhesive bandages
 
