@@ -12,9 +12,9 @@ with the basis stated:
 So the default basis is ITEMS, with a decimal where a container was part used.
 That is a much better position than the previous session concluded ("the count
 column silently mixes packs and items; 9 products are undecidable"). Under
-Saffron's rule 30 of 34 counted lines read cleanly as items. Only the four in
-AMBIGUOUS below resist it, and each resists for a specific stated reason rather
-than for want of a convention.
+Saffron's rule 30 of 34 counted lines read cleanly as items. The other four --
+tampons, pads, bin bags, wet kit bags -- needed her to state the basis directly;
+all four were confirmed 2026-08-05 and are recorded in RESOLVED_BASIS below.
 
 The count predates the v4 rebuild, so it is keyed against the OLD product names.
 COUNT_TO_V4_KEY maps them onto the v4 slugs. Three v3 rows are Sea Kelp products
@@ -117,25 +117,34 @@ COUNT_TO_V4_KEY = {
     "Notepads":                                                     "notepads",
 }
 
-# The four lines Saffron's "items, fractions for containers" rule does not
-# settle. Each is held rather than guessed: an on-hand figure that is wrong by
-# the pack size is the one error that turns a reset order into a stockout or a
-# £200 surplus. (key, reading_if_items, reading_if_packs, why it resists)
-AMBIGUOUS = {
-    "tampons": (4, 256,
-                "a pack is 64 and Par Qty is exactly one pack. 4 tampons is near-empty; "
-                "4 boxes is 256 and matches the surplus recorded on 2026-08-04. "
-                "Nobody counts 256 tampons individually, so this is probably boxes"),
-    "pads":    (11, 484,
-                "a pack is 44 and Par Qty is exactly one pack. Same reasoning as tampons: "
-                "11 packets is 484 pads and matches the recorded surplus"),
-    "bin_bags": (None, 100,
-                "0.5 of a bag is not a thing, so this one cannot be items. Half a 200-bag "
-                "pack is 100; half a roll (if the pack is 4 rolls of 50) is 25"),
-    "wet_kit_bags": (3, None,
-                "3 bags against a Par Qty of 20 reads as almost out, which is plausible. "
-                "But the pack changed from Newline's 20 to Amazon's 250, so neither the old "
-                "par nor the old pack size helps here"),
+# The four lines Saffron's "items, fractions for containers" rule did not settle
+# on its own. All four CONFIRMED by her 2026-08-05.
+#   (key, multiplier, resulting_items, basis_label, how it was settled)
+# multiplier is what the written figure is multiplied by to reach items.
+RESOLVED_BASIS = {
+    "tampons":      (64,  256, "packs (boxes of 64)",
+                     "confirmed: 4 boxes, not 4 tampons. 256 items, which is the surplus "
+                     "recorded on 2026-08-04"),
+    "pads":         (44,  484, "packs (packets of 44)",
+                     "confirmed: 11 packets, not 11 pads. 484 items, matching the recorded surplus"),
+    "bin_bags":     (200, 100, "packs (half a 200-bag pack)",
+                     "confirmed: half a 200-bag pack, so 100 bags - not half a roll of 50"),
+    "wet_kit_bags": (1,     3, "items",
+                     "confirmed: 3 individual bags, so almost out whichever pack size applies"),
+}
+
+# Products confirmed to be in surplus, so they stay out of any reset order
+# regardless of what their (blank) Par Qty implies.
+SURPLUS_CONFIRMED = {
+    "tampons": "256 items against a Par Qty of one 64-pack. Blank Par Qty in v4 reads as 'do not reorder'",
+    "pads":    "484 items against a Par Qty of one 44-pack. Same",
+}
+
+# Lines where the on-hand figure is below EVERY plausible minimum candidate, so
+# the order decision does not depend on the unresolved Par Unit question.
+ROBUST_ORDER = {
+    "wet_kit_bags": "3 bags is below every candidate minimum (20 on the old par, 500 on the "
+                    "new one), so this is orderable now without settling Par Unit first",
 }
 
 # Counts that need an adjustment before they mean on-hand stock.
@@ -172,16 +181,23 @@ def build():
         elif key in ADJUSTED:
             was, adj, why = ADJUSTED[key]
             basis, on_hand, note = "items (adjusted)", adj, why
-        elif key in AMBIGUOUS:
-            as_items, as_packs, why = AMBIGUOUS[key]
-            basis, on_hand, confirmed = "AMBIGUOUS", None, "no"
-            note = why
+        elif key in RESOLVED_BASIS:
+            mult, items, label, why = RESOLVED_BASIS[key]
+            basis, on_hand, note = label, items, why
 
         min_units = p["min_stock_units"]
         min_ok = p["min_confirmed"] == "yes"
         status, short = "", ""
         if on_hand is None:
             status = "unknown"
+        elif key in SURPLUS_CONFIRMED:
+            status = "surplus (confirmed)"
+            note = (note + ". " if note else "") + SURPLUS_CONFIRMED[key]
+        elif key in ROBUST_ORDER:
+            # Below every candidate minimum, so the order is safe to place, but
+            # the shortfall itself cannot be quantified until Par Unit is settled.
+            status, short = "BELOW minimum (qty TBC)", ""
+            note = (note + ". " if note else "") + ROBUST_ORDER[key]
         elif min_units == "":
             status = "no minimum set"
         elif not min_ok:
@@ -231,15 +247,15 @@ if __name__ == "__main__":
     assert set(n for n, _ in COUNT_V3) == set(COUNT_TO_V4_KEY), "count/key map out of step"
 
     counted = [r for r in rows if r["on_hand_items"] != ""]
-    below = [r for r in rows if r["status"] == "BELOW minimum"]
-    surplus = [r for r in rows if r["status"] == "surplus"]
+    below = [r for r in rows if r["status"].startswith("BELOW minimum")]
+    surplus = [r for r in rows if r["status"].startswith("surplus")]
     held = [r for r in rows if r["basis_confirmed"] == "no"]
     nomin = [r for r in rows if r["status"] in ("no minimum set", "minimum unconfirmed")]
 
     print(f"\n{len(rows)} lines mapped to v4 keys, {len(counted)} with a usable on-hand figure")
     print(f"  BELOW minimum : {len(below)}")
     print(f"  surplus       : {len(surplus)}  ({', '.join(r['display_name'] for r in surplus)})")
-    print(f"  basis held    : {len(held)}  ({', '.join(r['display_name'] for r in held)})")
+    print(f"  basis held    : {len(held)}  ({', '.join(r['display_name'] for r in held) or 'none - all 34 counted lines resolved'})")
     print(f"  no usable min : {len(nomin)}")
     print(f"  not counted   : {len([r for r in rows if r['count_as_written'] == ''])}")
     if unmapped:
@@ -247,6 +263,7 @@ if __name__ == "__main__":
               f"{', '.join(f'{n} ({v})' for n, v in unmapped)}")
 
     print("\nBELOW MINIMUM, worst first:")
-    for r in sorted(below, key=lambda r: -float(r["short_items"])):
-        print(f"  {r['display_name'][:26]:28} {r['on_hand_items']:>6} / {r['min_stock_units']:>5} "
-              f"{r['count_unit']:12} short {r['short_items']}")
+    for r in sorted(below, key=lambda r: -(float(r["short_items"]) if r["short_items"] != "" else -1)):
+        short = r["short_items"] if r["short_items"] != "" else "TBC"
+        print(f"  {r['display_name'][:26]:28} {r['on_hand_items']:>6} / {str(r['min_stock_units']):>5} "
+              f"{r['count_unit']:12} short {short}")

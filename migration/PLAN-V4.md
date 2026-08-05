@@ -186,14 +186,13 @@ bottle, `0.5` of a washing-up bottle, `0.5` of a ream of paper. The column was
 usable; nobody had written down the convention.
 
 Staged in `baseline_count_2026_08_04.csv`, keyed to the v4 slugs, via
-`scripts/build_baseline_count.py`. What it produces:
+`scripts/build_baseline_count.py`. **All 34 counted lines are resolved.**
 
 | | lines | |
 |---|---|---|
-| **below minimum** | 12 | the reset order |
-| surplus | 2 | Ice Bath Filters, Water Softener Salt (36 bags against a minimum of 10) |
-| ok | 4 | |
-| **basis held** | 4 | see below |
+| **below minimum** | 14 | the reset order |
+| surplus | 4 | Tampons, Sanitary Pads, Ice Bath Filters, Water Softener Salt |
+| ok | 2 | |
 | no usable minimum | 7 | 6 have no `Par Qty`; 1 is `min_confirmed = no` |
 | not counted | 2 | Microfibre Cloths, Notepads — **blank cells, which are not zeros** |
 | discarded | 1 | Sea Kelp Shampoo Refill (1 bottle) — retired product, no v4 row |
@@ -203,6 +202,7 @@ Staged in `baseline_count_2026_08_04.csv`, keyed to the v4 slugs, via
 | product | on hand | minimum | short |
 |---|---|---|---|
 | Hair Bands | 0 | 100 bands | 100 |
+| **Bin Bags** | 100 | 200 bags | 100 |
 | Deodorant — Men | 0 | 24 cans | 24 |
 | Deodorant — Women | 0 | 24 cans | 24 |
 | Blue Roll | 20 | 30 rolls | 10 |
@@ -214,22 +214,35 @@ Staged in `baseline_count_2026_08_04.csv`, keyed to the v4 slugs, via
 | Conditioner | 1 | 2 bottles | 1 |
 | Chalk Block | 1 | 2 blocks | 1 |
 | Washing Up Liquid | 0.5 | 1 bottle | 0.5 |
+| **Wet Kit Bags** | 3 | (500) | **qty TBC** |
 
 Six of those are at **zero or a half**, which is the reactive-ordering pattern
 showing up in a single snapshot rather than in an argument about it.
 
-### The four lines the rule does not settle
+**Wet Kit Bags is orderable without settling `Par Unit` first.** 3 bags is below
+every candidate minimum — 20 on the old Newline par, 500 on the new Amazon one —
+so the *decision* to order is safe even though the *quantity* isn't yet fixed.
+Worth separating those two, because most held lines block both and this one only
+blocks the second.
 
-Held at `basis_confirmed = no` rather than guessed, because an on-hand figure
-wrong by the pack size is the one error that turns the reset order into either a
-stockout or a few hundred pounds of surplus.
+### The four lines the rule did not settle — all confirmed 2026-08-05
 
-| product | as written | as items | as packs | why it resists |
+| product | as written | basis | items | |
 |---|---|---|---|---|
-| **Tampons** | 4 | 4 tampons | **256** | a pack is 64 and `Par Qty` is exactly one pack. Nobody counts 256 tampons individually, and a surplus was recorded on 04/08 — so probably 4 boxes |
-| **Sanitary Pads** | 11 | 11 pads | **484** | same shape: a pack is 44, and 11 packets matches the recorded surplus |
-| **Bin Bags** | 0.5 | — | **100** | half a bag is not a thing, so this one *cannot* be items. Half a 200-bag pack is 100; half a roll would be 25 |
-| **Wet Kit Bags** | 3 | **3 bags** | 60 | 3 against a par of 20 reads as almost out, which is plausible — but the pack changed from Newline's 20 to Amazon's 250, so neither the old par nor the old pack size helps |
+| **Tampons** | 4 | boxes of 64 | **256** | confirmed surplus — stays out of the order |
+| **Sanitary Pads** | 11 | packets of 44 | **484** | confirmed surplus — stays out of the order |
+| **Bin Bags** | 0.5 | half a 200-bag pack | **100** | short by 100 — into the order |
+| **Wet Kit Bags** | 3 | items | **3** | almost out — into the order |
+
+Tampons and pads read as packs; bin bags as half a pack; wet kit bags as
+individual items. So the count is *mostly* per item with four container-level
+exceptions — which is why the convention has to be recorded per product rather
+than asserted once for the sheet. `count_basis` in the CSV carries it per line.
+
+Both sanitary lines have a **blank `Par Qty`** in v4 where v3 said 64 and 44. On
+a confirmed surplus of 256 and 484 items, blank reads as *"do not reorder"* — but
+that should be stated in the sheet rather than left as an empty cell someone
+later fills in as an oversight.
 
 ### One count adjusted
 
@@ -525,24 +538,22 @@ During the reset, err generous.
 
 ## 12. Still open
 
-1. **Four lines of the baseline count** — Tampons, Sanitary Pads, Bin Bags, Wet
-   Kit Bags. See §2a. The other 30 are settled.
-2. **The 4 `Par Unit` rows** flagged in §1.3 — Blue Cloth, Ice Bath Sanitiser,
+1. **The 4 `Par Unit` rows** flagged in §1.3 — Blue Cloth, Ice Bath Sanitiser,
    Wet Kit Bags, Nitrile Gloves. All read as `packs`, but each is a change from
    v3 rather than a conversion of it, so each doubles or otherwise moves the
    requirement. Held at `min_confirmed = no`.
-3. **Water Softener Salt: £149.99 for what?** Pack size blank, note says
+2. **Water Softener Salt: £149.99 for what?** Pack size blank, note says
    "6 packs to fill tub". `Par Unit` is now set to `items` (10 bags), which makes
    the minimum safe, but the *price* basis still changes the shopping list by an
    order of magnitude. Do not let this line into a costed order until it is
    settled.
-4. **`Microfibre Cloths` has no category** — the only blank on the sheet.
+3. **`Microfibre Cloths` has no category** — the only blank on the sheet.
    Suggest `Staff Room`, alongside the other cleaning items.
-5. **Does the kit supplier sell a BS 8599-1 refill pack?** The route is decided;
+4. **Does the kit supplier sell a BS 8599-1 refill pack?** The route is decided;
    the answer is not in yet. If they don't, §8's ordering plan needs revisiting.
-6. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
+5. **Tampons and pads have a blank `Par Qty`** in v4, where v3 said 64 and 44.
    Both were in confirmed surplus, so blank probably means "don't reorder" —
    worth making explicit rather than leaving an empty cell that reads as an
    oversight. Both are zero-rated for VAT if they ever enter a costed order.
-7. **Concept Spa's VAT basis** — the last unverified line, worth £15.00 of
+6. **Concept Spa's VAT basis** — the last unverified line, worth £15.00 of
    exposure. Newline's departure closed the other one.
