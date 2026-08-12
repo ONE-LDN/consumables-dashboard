@@ -1,38 +1,38 @@
 Take date:,,,,
 Counted by:,,,,
-product_name_raw,Product,Location,Count,Notes
-d_batteries,D Batteries (Ergs) — batteries,FOH Desk,,
-hair_bands,Hair Bands — bands,FOH Desk,,
-key_fobs,Key Fobs — fobs,FOH Desk,,
-notepads,Notepads — pads,FOH Desk,,
-pens,Pens — pens,FOH Desk,,
-printer_ink_blk,Printer Ink - Black — cartridges,FOH Desk,,
-printer_ink_blue,Printer Ink - Blue — cartridges,FOH Desk,,
-printer_ink_pink,Printer Ink - Pink — cartridges,FOH Desk,,
-printer_ink_yellow,Printer Ink - Yellow — cartridges,FOH Desk,,
-paper_printer,Printer Paper — reams,FOH Desk,,
-blue_cloth,Blue Cloth Roll — rolls,Cafe,,
-puly_caffe_cleaner,Coffee Machine Cleaner — bottles,Cafe,,
-washing_up_liquid,Washing Up Liquid 5L — bottles,Cafe,,
-blue_rolls,Blue Roll (centrefeed) — rolls,Gym Floor,,
-chalk_block,Chalk Block — blocks,Gym Floor,,
-glade_sprays,Air Freshener Spray — cans,Toiletries,,
-conditioner,Conditioner 5L — bottles,Toiletries,,
-sure_deodorant_men,Deodorant - Men — cans,Toiletries,,
-sure_deodorant_women,Deodorant - Women — cans,Toiletries,,
-moisturiser,Hand & Body Lotion 5L — bottles,Toiletries,,
-sanitiser_gel,Hand Sanitiser 5L — bottles,Toiletries,,
-hand_wash,Hand Wash 5L — bottles,Toiletries,,
-chill_tub_filters,Ice Bath Filter — filters,Toiletries,,
-chill_tubs_sanitiser,Ice Bath Sanitiser — tubs,Toiletries,,
-pads,Sanitary Pads — pads,Toiletries,,
-shampoo,Shampoo & Body Wash 5L — bottles,Toiletries,,
-tampons,Tampons — tampons,Toiletries,,
-toilet_rolls,Toilet Roll — rolls,Toiletries,,
-urinal_shields,Urinal Shields — shields,Toiletries,,
-wet_kit_bags,Wet Kit Bags — bags,Toiletries,,
-bin_bags,Bin Bags 80L — bags,Staff Room,,
-microfibre_cloths,Microfibre Cloths — cloths,Staff Room,,
-multipurpose_cleaner,Multi-Surface Cleaner 5L — bottles,Staff Room,,
-blue_gloves_large,Nitrile Gloves (L) — gloves,Staff Room,,
-water_softener_salt,Water Softener Salt — bags,Plant room,,
+Product name,Category,Location,Count,Unit
+D Batteries (Ergs),Gym,FOH Desk,,batteries
+Hair Bands,Member Supplies,FOH Desk,,bands
+Key Fobs,Member Supplies,FOH Desk,,fobs
+Notepads,Stationery,FOH Desk,,pads
+Pens,Stationery,FOH Desk,,pens
+Printer Ink - Black,Stationery,FOH Desk,,cartridges
+Printer Ink - Blue,Stationery,FOH Desk,,cartridges
+Printer Ink - Pink,Stationery,FOH Desk,,cartridges
+Printer Ink - Yellow,Stationery,FOH Desk,,cartridges
+Printer Paper,Stationery,FOH Desk,,reams
+Blue Cloth Roll,Cleaning,Cafe,,rolls
+Coffee Machine Cleaner,Cleaning,Cafe,,bottles
+Washing Up Liquid 5L,Cleaning,Cafe,,bottles
+Blue Roll (centrefeed),Cleaning,Gym Floor,,rolls
+Chalk Block,Gym,Gym Floor,,blocks
+Air Freshener Spray,Washroom,Toiletries,,cans
+Conditioner 5L,Toiletries,Toiletries,,bottles
+Deodorant - Men,Toiletries,Toiletries,,cans
+Deodorant - Women,Toiletries,Toiletries,,cans
+Hand & Body Lotion 5L,Toiletries,Toiletries,,bottles
+Hand Sanitiser 5L,Toiletries,Toiletries,,bottles
+Hand Wash 5L,Toiletries,Toiletries,,bottles
+Ice Bath Filter,Facilities,Toiletries,,filters
+Ice Bath Sanitiser,Facilities,Toiletries,,tubs
+Sanitary Pads,Washroom,Toiletries,,pads
+Shampoo & Body Wash 5L,Toiletries,Toiletries,,bottles
+Tampons,Washroom,Toiletries,,tampons
+Toilet Roll,Washroom,Toiletries,,rolls
+Urinal Shields,Washroom,Toiletries,,shields
+Wet Kit Bags,Member Supplies,Toiletries,,bags
+Bin Bags 80L,Cleaning,Staff Room,,bags
+Microfibre Cloths,Cleaning,Staff Room,,cloths
+Multi-Surface Cleaner 5L,Cleaning,Staff Room,,bottles
+Nitrile Gloves (L),Cleaning,Staff Room,,gloves
+Water Softener Salt,Facilities,Plant room,,bags

@@ -8,8 +8,10 @@
  * TABS
  *   Products    — the master catalogue you maintain by hand (one row per item).
  *                 "Sync products to dashboard" pushes it into Supabase.
- *   Stock Count — weekly on-hand counts, in PACKS. "Submit stock count" writes
- *                 them to shop_stock_takes.
+ *   Stock Count — weekly on-hand counts, in ITEMS (the Unit column says what an
+ *                 item is for each product). "Submit stock count" writes them
+ *                 to shop_stock_takes. Decimals are valid: half a 5L bottle is
+ *                 0.5. Blank means "not counted"; 0 means "counted, none left".
  *   Order Log   — orders placed. "Submit order log" writes them to
  *                 shop_consumable_deliveries, then clears the entered rows.
  *
@@ -43,9 +45,17 @@ var COL = {
 };
 
 // Stock Count / Order Log layout
+// Stock Count columns are Product name | Category | Location | Count | Unit.
+// Count is column 4 and there is no Notes column; see buildCountSheet().
 var COUNT_DATE_CELL = 'B1';   // take date
 var COUNT_HEADER_ROW = 3;
 var COUNT_FIRST_ROW  = 4;
+
+// The order you walk the building when counting. Rows are grouped by Location
+// in this sequence, not alphabetically.
+var COUNT_WALK_ORDER = [
+  'FOH Desk', 'Cafe', 'Gym Floor', 'Toiletries', 'Staff Room', 'Plant room',
+];
 var ORDER_HEADER_ROW = 1;
 var ORDER_FIRST_ROW  = 2;
 
@@ -155,10 +165,32 @@ function syncProducts() {
 }
 
 // ── ② Build / rebuild the Stock Count sheet from the live product set ────────
+//
+// Layout: Product name | Category | Location | Count | Unit.
+//
+// There is deliberately NO product_name_raw column — the slug lives on the
+// Products tab, not on the sheet people count into. submitCounts() joins on
+// display_name instead, which is why display_name must stay unique and must be
+// renamed in the catalogue rather than here.
+//
+// Category (what kind of thing) and Location (where you count it) are separate
+// axes. `subcategory` holds the location; `product_type` holds the category.
 function buildCountSheet() {
   var products = _sbGet('shop_product_lookup',
-    'select=product_name_raw,display_name,subcategory&category=eq.' + CATEGORY +
-    '&active=eq.true&order=subcategory,display_name');
+    'select=display_name,product_type,subcategory,count_unit&category=eq.' + CATEGORY +
+    '&active=eq.true&order=display_name');
+
+  // Count a room at a time. A list that jumps between rooms gets counted wrong,
+  // so the walk beats alphabetical order. Unknown locations sort to the end
+  // rather than vanishing.
+  products.sort(function (a, b) {
+    var ia = COUNT_WALK_ORDER.indexOf(a.subcategory || '');
+    var ib = COUNT_WALK_ORDER.indexOf(b.subcategory || '');
+    if (ia < 0) ia = COUNT_WALK_ORDER.length;
+    if (ib < 0) ib = COUNT_WALK_ORDER.length;
+    if (ia !== ib) return ia - ib;
+    return String(a.display_name).localeCompare(String(b.display_name));
+  });
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(COUNT_SHEET) || ss.insertSheet(COUNT_SHEET);
@@ -167,17 +199,21 @@ function buildCountSheet() {
   sh.getRange('A1').setValue('Take date:');
   sh.getRange(COUNT_DATE_CELL).setValue(new Date());
   sh.getRange(COUNT_DATE_CELL).setNumberFormat('yyyy-mm-dd');
+  sh.getRange('A2').setValue('Counted by:');
 
-  var headers = ['product_name_raw', 'Product', 'Location', 'Count (packs)', 'Notes'];
+  var headers = ['Product name', 'Category', 'Location', 'Count', 'Unit'];
   sh.getRange(COUNT_HEADER_ROW, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
 
   var out = products.map(function (p) {
-    return [p.product_name_raw, p.display_name || p.product_name_raw, p.subcategory || '', '', ''];
+    return [p.display_name, p.product_type || '', p.subcategory || '', '', p.count_unit || ''];
   });
   if (out.length) sh.getRange(COUNT_FIRST_ROW, 1, out.length, headers.length).setValues(out);
 
-  sh.hideColumns(1);
+  // Count is the only column anyone types in; the rest is reference.
+  sh.getRange(COUNT_HEADER_ROW, 1, out.length + 1, 3).setBackground('#f3f3f3');
+  sh.getRange(COUNT_HEADER_ROW, 5, out.length + 1, 1).setBackground('#f3f3f3');
   sh.setFrozenRows(COUNT_HEADER_ROW);
+  sh.autoResizeColumns(1, headers.length);
   SpreadsheetApp.getUi().alert('Stock Count sheet rebuilt with ' + out.length + ' products.');
 }
 
@@ -194,20 +230,40 @@ function submitCounts() {
   if (last < COUNT_FIRST_ROW) throw new Error('No product rows.');
   var data = sh.getRange(COUNT_FIRST_ROW, 1, last - COUNT_FIRST_ROW + 1, 5).getValues();
 
-  var payload = [];
-  data.forEach(function (row) {
-    var key = String(row[0] || '').trim();
-    var count = row[3];
-    if (key && count !== '' && count !== null && !isNaN(count)) {
-      payload.push({
-        product_name_raw: key,
-        take_date:        takeDate,
-        actual_count:     Number(count),
-        notes:            String(row[4] || '').trim() || null,
-        source:           'sheet',
-      });
-    }
+  // The count sheet carries no slug column, so display_name is the join key.
+  var lookup = _sbGet('shop_product_lookup',
+    'select=product_name_raw,display_name&category=eq.' + CATEGORY + '&active=eq.true');
+  var keyByName = {};
+  lookup.forEach(function (p) {
+    keyByName[String(p.display_name).trim().toLowerCase()] = p.product_name_raw;
   });
+
+  var payload = [];
+  var unmatched = [];
+  data.forEach(function (row) {
+    var name = String(row[0] || '').trim();
+    var count = row[3];
+    if (!name || count === '' || count === null || isNaN(count)) return;
+    var key = keyByName[name.toLowerCase()];
+    if (!key) { unmatched.push(name); return; }
+    payload.push({
+      product_name_raw: key,
+      take_date:        takeDate,
+      actual_count:     Number(count),
+      source:           'sheet',
+    });
+  });
+
+  // Refuse the whole submission rather than silently dropping the rows that did
+  // not match. A partial count reads as a real count and corrupts the usage
+  // arithmetic for every product that went missing.
+  if (unmatched.length) {
+    throw new Error(
+      'These product names are not in the catalogue, so nothing was submitted:\n  ' +
+      unmatched.join('\n  ') +
+      '\n\nRename products on the Products tab and rebuild the Stock Count sheet — ' +
+      'not here.');
+  }
   if (!payload.length) { SpreadsheetApp.getUi().alert('No counts entered.'); return; }
 
   _sbSend('POST', 'shop_stock_takes', 'on_conflict=product_name_raw,take_date',
