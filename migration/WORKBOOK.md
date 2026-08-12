@@ -213,7 +213,18 @@ checked.
 alter table shop_product_lookup add column count_unit    text;
 alter table shop_product_lookup add column min_confirmed boolean;
 alter table shop_product_lookup add column order_class   text;
+
+-- REQUIRED: minimums can be fractional. Blue Cloth's is a quarter of a roll.
+alter table shop_product_lookup alter column min_stock_units type numeric;
 ```
+
+⚠ **`min_stock_units` is currently `integer` and must become `numeric`.**
+`actual_count` is already numeric — half a bottle is a real count of `0.5` — so
+comparing a fractional count against an integer minimum is the same
+units-mismatch that has bitten this project twice. `syncProducts` now sends the
+minimum through `_num`, not `_int`: rounding `0.25` to `0` would silently turn
+*"reorder at a quarter roll"* into *"never reorder"*. Until the column is
+numeric, Postgres rejects the row outright, which is the safe failure.
 
 Add these alongside `monthly_usage_units` from PLAN-V4 §6. Until they exist,
 `syncProducts` fails with a PostgREST error naming the missing column — which is
@@ -268,12 +279,53 @@ per fob, and 500 was the order quantity, not the pack. That **retires correction
 #5 from the first session**, which struck out a pack size of 1 for fobs as
 invented. It is no longer invented; it is on an invoice.
 
-Still `measure_only`, and rightly so: fobs go missing rather than being consumed,
-and reordering 500 at £1,863 is a procurement decision, not a reorder trigger.
+**Reclassified `measure_only` → `reorder`.** It sat with the printer inks on the
+grounds that such things go missing rather than being consumed. But the 04/08
+count found **zero fobs**, there is now a unit price, and a minimum on a
+`measure_only` row does nothing at all — the dashboard excludes that class from
+"order now" (PLAN-V4 §7.6). The 50-fob minimum only has teeth as `reorder`.
 
 Two caveats kept in Notes: the quote does not name the vendor (the part is
 Gantner standard, `G-756026`), and a minimum order quantity may apply — 500 is
-the only purchase on record.
+the only purchase on record, so a 50-fob order may not be placeable as such.
+
+### Minimums set 2026-08-12
+
+All stated outright in items, so all are `Par unit = items`. No usage history
+exists for any of them; these are stated requirements, which under
+`MINIMUM-STOCK.md` beat every computed candidate.
+
+| product | minimum | on hand 04/08 | |
+|---|---|---|---|
+| Pens | 2 pens | 12 | ok |
+| Air Freshener Spray | 2 cans | 3 | ok |
+| Ice Bath Sanitiser | 1 tub | 3 | ok |
+| **Key Fobs** | 50 fobs | **0** | **short 50 — £179.50 net** |
+| **Nitrile Gloves (L)** | 50 gloves | **0** | **short 50 — 1 pack** |
+| **Blue Cloth Roll** | 0.25 roll | **0** | **short — 1 case of 6, £11.98** |
+| Wet Kit Bags | 1 roll | *see below* | basis changed |
+
+**This clears the last four `min_confirmed = no` rows**, so nothing in the
+catalogue now carries an unconfirmed minimum and nothing has a blank par.
+
+Two of these answers do more than set a number:
+
+**Nitrile Gloves — 50 settles the minimum without settling the pack size.** 50 is
+a quarter of a 200-pack or half a 100-pack, so it holds whichever the pack size
+turns out to be. The long-running 200-vs-100 question no longer blocks the
+minimum; it still blocks sizing the order.
+
+**Wet Kit Bags — the count unit changes from bags to rolls.** They are on rolls,
+one in each of the male and female toilets, and the minimum is half of the two.
+Two consequences:
+
+- **The 04/08 count of 3 no longer reads.** It was confirmed at the time as
+  *3 individual bags*. As rolls it would read as comfortably above a 1-roll
+  minimum, which is the opposite of the truth — the note said "almost out".
+  It must not be loaded as count 1 for this product, and this line needs a
+  recount.
+- **Bags per roll is unknown**, so no order can be sized: the count is in rolls
+  and the pack of 250 is in bags, with no bridge between them.
 
 ### Effect on the next `syncProducts` run
 
@@ -296,21 +348,24 @@ not a check for a mistake.
 
 ## Known gaps
 
-- **4 rows are `min_confirmed = no`** — Blue Cloth, Ice Bath Sanitiser, Wet Kit
-  Bags, Nitrile Gloves. Each reads as `packs`, but each is a change from v3
-  rather than a conversion, so each doubles a requirement (PLAN-V4 §12.1).
+- **Wet Kit Bags needs a recount.** Its count unit changed from bags to rolls,
+  so the 04/08 figure of 3 — confirmed at the time as *3 individual bags* — no
+  longer reads. It must not be loaded as count 1 for this product, and it must
+  not be read as "3 rolls, comfortably above the 1-roll minimum", which is how
+  it now looks.
+- **Bags per roll is unknown for Wet Kit Bags**, so no order can be sized: the
+  count is in rolls and the pack of 250 is in bags, with no bridge between them.
 - **Water Softener Salt at £149.99 with no pack size.** Par Unit is `items`, so
   the minimum is safe, but the price basis still swings a costed order by an
   order of magnitude. Do not let it into an order until settled.
 - **3 products have no pack size**, so no order can be sized: Water Softener
-  Salt, Printer Paper, Pens. Key Fobs and Notepads left the list — the fobs now
-  have an evidenced pack size, notepads were removed.
+  Salt, Printer Paper, Pens. All three now have a minimum, so the shortfall is
+  visible even though the order quantity is not.
 - **Pens still need a pack size and price.** The listing is linked but Amazon
   is unreachable from this environment, so neither could be read off it and
   neither is guessed.
-- **Tampons and Sanitary Pads have a blank par** where v3 said 64 and 44. Both
-  were in confirmed surplus, so blank probably means "do not reorder" — worth
-  stating rather than leaving an empty cell that reads as an oversight.
+- **Key fobs may have a minimum order quantity.** 500 is the only purchase on
+  record, so a 50-fob order may not be placeable as such.
 - `microfibre_cloths` Location is a placement, not a settled answer.
 - The `Category` values are mine, not the business's. Edit `CATEGORY` in
   `scripts/build_workbook.py` and re-paste.

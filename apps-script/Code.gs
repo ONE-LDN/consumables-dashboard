@@ -151,9 +151,14 @@ function syncProducts() {
       order_url:         String(row[iLink] || '').trim() || null,
       cost_price:        _num(row[iPrice]),
       pack_size:         _int(row[iUnits]),
-      // Items, not packs. Blank stays null: "no minimum set" and "a minimum of
-      // zero" are different claims and the dashboard treats them differently.
-      min_stock_units:   _int(row[iMin]),
+      // Items, not packs, and NOT rounded: minimums can be fractional (a
+      // quarter of a roll is 0.25). _int here would silently turn "reorder at a
+      // quarter roll" into "never reorder". Requires min_stock_units to be
+      // numeric in Supabase — see WORKBOOK.md.
+      //
+      // Blank stays null: "no minimum set" and "a minimum of zero" are
+      // different claims and the dashboard treats them differently.
+      min_stock_units:   _num(row[iMin]),
       min_confirmed:     String(row[iMinOk] || '').trim().toLowerCase() === 'yes',
       order_class:       String(row[iKlass] || '').trim() || null,
       active:            true,

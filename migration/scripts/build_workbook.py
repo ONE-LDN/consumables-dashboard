@@ -139,10 +139,10 @@ INK_MERGED = {
 # the evidence in its note, because every price and pack size in this catalogue
 # has to be attributable — guessing them is what produced "order 161 packs of
 # plasters" and "order 2 fobs" in earlier passes.
-FIELD_UPDATE = {
+FIELD_UPDATE = [
     # Amazon is unreachable from here, so pack size and price could not be read
     # off the listing and stay blank rather than guessed.
-    "pens": (
+    ("pens",
         {"order_link_or_desc": "https://www.amazon.co.uk/dp/B07TVR5X6W"},
         "product link supplied 2026-08-12; pack size and price still needed from "
         "the listing",
@@ -153,15 +153,60 @@ FIELD_UPDATE = {
     # an oversight and invites someone to fill it in wrongly later. Restoring
     # v3's own figure states it instead, and changes nothing operationally:
     # 256 > 64 and 484 > 44, so neither triggers an order.
-    "tampons": (
+    ("tampons",
         {"par_qty_sheet": "1", "par_unit": "packs"},
         "Par restored from v3 (64 items = 1 box of 64); blank in v4. In "
         "confirmed surplus at 256 items, so this does not trigger an order",
     ),
-    "pads": (
+    ("pads",
         {"par_qty_sheet": "1", "par_unit": "packs"},
         "Par restored from v3 (44 items = 1 packet of 44); blank in v4. In "
         "confirmed surplus at 484 items, so this does not trigger an order",
+    ),
+    # ── Minimums set by Saffron 2026-08-12 ──────────────────────────────────
+    # All stated in items, all set outright, so all are `items` regardless of
+    # what the sheet's Par Qty said. An explicitly-stated human requirement
+    # beats every computed candidate (MINIMUM-STOCK.md), which is exactly what
+    # these are — no usage history exists for any of them.
+    ("pens",
+        {"par_qty_sheet": "2", "par_unit": "items"},
+        "minimum set to 2 pens 2026-08-12",
+    ),
+    ("glade_sprays",
+        {"par_qty_sheet": "2", "par_unit": "items"},
+        "minimum set to 2 cans 2026-08-12",
+    ),
+    # 0.25 of a roll. Fractional minimums are why min_stock_units has to be
+    # numeric rather than integer — see WORKBOOK.md.
+    ("blue_cloth",
+        {"par_qty_sheet": "0.25", "par_unit": "items", "min_confirmed": "yes"},
+        "minimum set to a quarter of one roll 2026-08-12; replaces the "
+        "unconfirmed 2 cases = 12 rolls",
+    ),
+    # 50 gloves settles the minimum without settling the pack size: it is a
+    # quarter of a 200-pack or half a 100-pack, so it holds either way. The
+    # pack size is still unverified for ORDER SIZING, which is a separate job.
+    ("blue_gloves_large",
+        {"par_qty_sheet": "50", "par_unit": "items", "min_confirmed": "yes"},
+        "minimum set to 50 gloves 2026-08-12 — a quarter of a 200-pack or half "
+        "a 100-pack, so the minimum holds whichever the pack size turns out to "
+        "be; pack size still unverified for sizing an order",
+    ),
+    ("chill_tubs_sanitiser",
+        {"par_qty_sheet": "1", "par_unit": "items", "min_confirmed": "yes"},
+        "minimum set to 1 tub 2026-08-12; replaces the unconfirmed 2 packs = 40 tubs",
+    ),
+    # The count unit changes with this answer: wet kit bags are on rolls, one in
+    # each of the male and female toilets, and the minimum is half of the two —
+    # one roll. The 250 in Pack size counts BAGS, so the bridge from the count
+    # unit to the order unit is now unknown. See WORKBOOK.md.
+    ("wet_kit_bags",
+        {"par_qty_sheet": "1", "par_unit": "items", "count_unit": "rolls",
+         "min_confirmed": "yes"},
+        "minimum set to 1 roll 2026-08-12 (half of the two rolls, one per "
+        "toilet); count unit changed from bags to rolls, so bags per roll is "
+        "now needed to size an order from the 250-bag pack, and the 04/08 count "
+        "of 3 was in bags and no longer reads",
     ),
     # Procurement quote: 500 x £3.59 = £1,795.00 net, +£68.01 delivery,
     # sub-total £1,863.01 ex VAT, £2,235.61 inc. ✓
@@ -169,18 +214,30 @@ FIELD_UPDATE = {
     # This retires correction #5 from the first session, which struck out a pack
     # size of 1 for fobs as invented. It is no longer invented: the quote prices
     # per fob, and 500 was the order quantity, not the pack.
-    "key_fobs": (
+    #
+    # Also reclassified from measure_only. It was grouped with the printer inks
+    # on the grounds that such things go missing rather than being consumed —
+    # but the 04/08 count found zero fobs, there is now a unit price, and a
+    # minimum on a measure_only row does nothing: the dashboard excludes
+    # measure_only from "order now" (PLAN-V4 §7.6). A minimum only has teeth
+    # once the row is `reorder`.
+    ("key_fobs",
         {
             "order_link_or_desc": "GAT Key Tag 180 F7 1k black — MIFARE 7Byte UID, "
                                   "coded to Gantner Standard, part G-756026",
             "units_per_pack": "1",
             "price_per_pack_gbp": "3.59",
+            "par_qty_sheet": "50",
+            "par_unit": "items",
+            "order_class": "reorder",
         },
         "unit price from the 500-fob procurement quote (500 x £3.59 = £1,795.00 "
         "net); delivery charged separately at £68.01; the quote does not name the "
-        "vendor and a minimum order quantity may apply",
+        "vendor and a minimum order quantity may apply; minimum set to 50 fobs "
+        "2026-08-12 and reclassified measure_only -> reorder, since a minimum on "
+        "a measure-only row never surfaces",
     ),
-}
+]
 
 # An explicitly-stated human requirement beats the computed candidate — the
 # rule from MINIMUM-STOCK.md. These are the only two rows where Par x Pack Size
@@ -273,7 +330,11 @@ def load_products():
     merged = {f: INK_MERGED.get(f, "") for f in fields}
     products.append(merged)
 
-    for key, (updates, why) in FIELD_UPDATE.items():
+    # A list rather than a dict, and entries COMPOSE: several entries may name
+    # the same product and each is applied in turn. As a dict this silently
+    # dropped all but the last entry for a key, which cost a set minimum once
+    # already.
+    for key, updates, why in FIELD_UPDATE:
         p = next((x for x in products if x["product_name_raw"] == key), None)
         if p is None:
             raise SystemExit("no such product for field update: " + key)
