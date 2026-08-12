@@ -87,7 +87,7 @@
   <div class="header">
     <div class="header-title">
       <h1><span class="accent">ONE LDN</span> / Consumables</h1>
-      <div class="subtitle">Par-based ordering · Weekly stock counts · Delivery-corrected predictions</div>
+      <div class="subtitle">Minimum-based ordering · Weekly stock counts · Delivery-corrected predictions</div>
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary btn-sm" onclick="refresh()">Refresh</button>
@@ -103,7 +103,7 @@
     <div class="kpi-card red">
       <div class="kpi-label">Due to Order</div>
       <div class="kpi-value" id="kpiDue">—</div>
-      <div class="kpi-sub" id="kpiDueSub">Items at or below par</div>
+      <div class="kpi-sub" id="kpiDueSub">Items below their minimum</div>
     </div>
     <div class="kpi-card amber">
       <div class="kpi-label">Last Stock Count</div>
@@ -126,17 +126,17 @@
   <!-- ═══ ORDER PREDICTION ═══ -->
   <div class="panel active" id="panelPredict">
     <div class="banner" id="shoppingListWrap">
-      <strong>Shopping list</strong> — items at or below par, grouped by supplier.
+      <strong>Shopping list</strong> — items below their minimum, grouped by supplier. Quantities in packs; prices net of VAT.
       <div id="shoppingList" style="margin-top:8px;">—</div>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
           <th>Product</th><th>Supplier</th>
-          <th style="text-align:right;">Est. Stock (packs)</th>
-          <th style="text-align:right;">Par/mo</th>
+          <th style="text-align:right;">Est. Stock</th>
+          <th style="text-align:right;">Minimum</th>
           <th style="text-align:right;">Cover</th>
-          <th style="text-align:right;">Suggested Order</th>
+          <th style="text-align:right;">Suggested Order (packs)</th>
           <th style="text-align:right;">Est. Cost</th>
           <th style="text-align:center;">Status</th>
         </tr></thead>
@@ -144,8 +144,11 @@
       </table>
     </div>
     <p class="note-line">
-      Est. stock = last count + orders since − usage since (usage = measured from consecutive counts where available, otherwise the monthly par).
-      "Cover" is days of stock left. An item flags <strong>Order now</strong> when it falls below par cover / min stock, or — with no count yet — when ~a month has passed since the last order. Suggested order tops back up to one month of par.
+      Counts, minimums and usage are all in <strong>items</strong> — rolls, bottles, cans — never packs. Deliveries are logged in packs and converted with the product's pack size.
+      Est. stock = last count + deliveries since − usage since (usage = measured from consecutive counts where available, otherwise the figure on record).
+      "Cover" is days of stock left. An item flags <strong>Order now</strong> when it drops below its minimum, or under 2 days' cover, or — with no count yet — when ~a month has passed since the last order.
+      Suggested order tops up to the minimum plus a month of usage, or plus one pack where no usage figure exists, and is shown in <strong>packs</strong> because that is what you buy.
+      Where a pack size or minimum is missing the order is left blank with the reason, rather than computed through the gap.
     </p>
   </div>
 
@@ -158,11 +161,11 @@
       <table>
         <thead><tr>
           <th>Product</th><th>Location</th>
-          <th style="text-align:right;">Last Count (packs)</th>
+          <th style="text-align:right;">Last Count</th>
           <th>Counted On</th>
           <th style="text-align:right;">Est. Now</th>
-          <th style="text-align:right;">Par/mo</th>
-          <th>Usage check</th>
+          <th style="text-align:right;">Minimum</th>
+          <th>Measured usage</th>
         </tr></thead>
         <tbody id="stockTbody"><tr><td colspan="7" class="loading">Loading…</td></tr></tbody>
       </table>
@@ -233,11 +236,14 @@ async function sbDelete(table, id) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MODEL CONSTANTS  (hybrid: monthly par baseline + count correction)
+// MODEL CONSTANTS  (minimum + count correction, all in items)
 // ═══════════════════════════════════════════════════════════════════════════
+// EVERYTHING HERE IS IN ITEMS, NOT PACKS. Counts are items, minimums are items,
+// usage is items/month. Deliveries are the one exception — they are logged in
+// packs, and pack_size is the only bridge. See deliveredItems().
 const CYCLE_DAYS = 30;   // consumables are ordered ~monthly
-const LEAD_DAYS  = 7;    // buffer/lead before running out → "order now" window
-const DRIFT_RATIO = 1.5; // measured usage vs par beyond this → flag a drift note
+const LEAD_DAYS  = 2;    // confirmed: every supplier delivers within 1–2 days
+const DRIFT_RATIO = 1.5; // measured usage vs the stored figure beyond this → note
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STATE
@@ -252,7 +258,8 @@ let orders   = [];   // shop_consumable_deliveries
 async function loadAll() {
   const [prod, tk, ord] = await Promise.all([
     sbGet('shop_product_lookup',
-      'select=product_name_raw,display_name,subcategory,supplier,order_url,cost_price,pack_size,monthly_par_packs,min_stock_units' +
+      'select=product_name_raw,display_name,product_type,subcategory,supplier,order_url,cost_price,' +
+      'pack_size,count_unit,count_step,min_stock_units,min_confirmed,order_class,monthly_usage_units' +
       '&category=eq.Consumables&active=eq.true&order=subcategory,display_name'),
     sbGet('shop_stock_takes', 'select=product_name_raw,take_date,actual_count,notes,source&order=take_date.desc'),
     sbGet('shop_consumable_deliveries', 'select=*&order=delivery_date.desc'),
@@ -283,39 +290,69 @@ function ordersFor(key) {
 // HYBRID ENGINE — one product → metrics
 // ═══════════════════════════════════════════════════════════════════════════
 function computeItem(p) {
-  const key = p.product_name_raw;
-  const par = num(p.monthly_par_packs);              // packs / month
-  const parWeekly = par !== null ? par * 12 / 52 : null;
-  const myTakes = takesFor(key);
+  const key         = p.product_name_raw;
+  const unit        = p.count_unit || 'items';
+  const packSize    = num(p.pack_size);                 // items per pack
+  const minItems    = num(p.min_stock_units);           // ITEMS
+  const step        = num(p.count_step) || 1;           // count precision, items
+  const storedMonthly = num(p.monthly_usage_units);     // ITEMS / month
+  const measureOnly = p.order_class === 'measure_only';
+  const minOk       = p.min_confirmed !== false;        // null → treat as fine
+  const myTakes  = takesFor(key);
   const myOrders = ordersFor(key);
   const lastTake = myTakes[0] || null;
-  const today = todayStr();
+  const today    = todayStr();
 
-  // Measured weekly usage from the two most recent counts (par correction).
-  let measuredWeekly = null, measuredMonthly = null;
+  // Deliveries are logged in PACKS; counts are in ITEMS. pack_size is the only
+  // bridge between them, so without one a delivery cannot enter the arithmetic
+  // at all — returns null, and every figure downstream stays null rather than
+  // silently adding packs to items.
+  function deliveredItems(afterDate, upToDate) {
+    const window = myOrders.filter(o => o.delivery_date > afterDate && o.delivery_date <= upToDate);
+    let total = 0;
+    for (const o of window) {
+      // The pack size recorded on the delivery is what actually arrived; the
+      // catalogue's current one may have changed since.
+      const ps = num(o.pack_size) !== null ? num(o.pack_size) : packSize;
+      if (ps === null) return null;
+      total += (num(o.qty_cases) || 0) * ps;
+    }
+    return total;
+  }
+
+  // Measured usage from the two most recent counts, in items.
+  let measuredMonthly = null, usageNote = null;
   if (myTakes.length >= 2) {
     const newer = myTakes[0], older = myTakes[1];
-    const ordersBetween = myOrders
-      .filter(o => o.delivery_date > older.take_date && o.delivery_date <= newer.take_date)
-      .reduce((s, o) => s + (num(o.qty_cases) || 0), 0);
-    const usage = Number(older.actual_count) + ordersBetween - Number(newer.actual_count);
+    const inItems = deliveredItems(older.take_date, newer.take_date);
     const days = daysBetween(older.take_date, newer.take_date);
-    if (days > 0 && usage >= 0) {
-      measuredWeekly = usage / days * 7;
-      measuredMonthly = measuredWeekly * 52 / 12;
+    if (inItems === null) {
+      usageNote = 'needs a pack size to count the delivery in between';
+    } else if (days > 0) {
+      const usage = Number(older.actual_count) + inItems - Number(newer.actual_count);
+      if (usage < 0) {
+        usageNote = 'stock rose with no logged delivery — check the Order Log';
+      } else if (usage < step * 2) {
+        // Both counts carry the count-step error, so their difference carries
+        // roughly twice it. Below that, the movement is noise, not a reading.
+        usageNote = `moved under ${step * 2} ${unit} — within count precision`;
+      } else {
+        measuredMonthly = usage / days * 7 * 52 / 12;
+      }
     }
   }
-  const weeklyUsage = measuredWeekly !== null ? measuredWeekly : parWeekly;
+  const usageMonthly = measuredMonthly !== null ? measuredMonthly : storedMonthly;
+  const usageWeekly  = usageMonthly !== null ? usageMonthly * 12 / 52 : null;
 
-  // Estimated on-hand now (packs).
-  let estPacks = null;
+  // Estimated on-hand now, in items.
+  let estItems = null;
   if (lastTake) {
-    const ordersSince = myOrders
-      .filter(o => o.delivery_date > lastTake.take_date && o.delivery_date <= today)
-      .reduce((s, o) => s + (num(o.qty_cases) || 0), 0);
-    const daysSince = Math.max(0, daysBetween(lastTake.take_date, today));
-    const used = weeklyUsage !== null ? (weeklyUsage / 7) * daysSince : 0;
-    estPacks = Math.max(0, Number(lastTake.actual_count) + ordersSince - used);
+    const since = deliveredItems(lastTake.take_date, today);
+    if (since !== null) {
+      const daysSince = Math.max(0, daysBetween(lastTake.take_date, today));
+      const used = usageWeekly !== null ? (usageWeekly / 7) * daysSince : 0;
+      estItems = Math.max(0, Number(lastTake.actual_count) + since - used);
+    }
   }
 
   // Last order + cadence.
@@ -323,16 +360,17 @@ function computeItem(p) {
     ? myOrders.map(o => o.delivery_date).sort().slice(-1)[0] : null;
   const daysSinceOrder = lastOrderDate ? daysBetween(lastOrderDate, today) : null;
 
-  // Cover (days of stock left).
-  const coverDays = (estPacks !== null && weeklyUsage) ? estPacks / (weeklyUsage / 7) : null;
-  const minPacks = num(p.min_stock_units);
+  const coverDays = (estItems !== null && usageWeekly) ? estItems / (usageWeekly / 7) : null;
 
-  // Flag.
+  // Flag. Measure-only products are counted to spot them going missing, never
+  // ordered, so they never reach "order now".
   let flag;
-  if (par === null || par === 0) {
+  if (measureOnly) {
+    flag = 'measure';
+  } else if (minItems === null) {
     flag = 'none';
-  } else if (estPacks !== null) {
-    if (minPacks !== null && estPacks < minPacks) flag = 'now';
+  } else if (estItems !== null) {
+    if (estItems < minItems) flag = 'now';
     else if (coverDays !== null && coverDays < LEAD_DAYS) flag = 'now';
     else if (coverDays !== null && coverDays < LEAD_DAYS * 2) flag = 'soon';
     else flag = 'ok';
@@ -344,23 +382,45 @@ function computeItem(p) {
     flag = 'none';                                // no count, never ordered
   }
 
-  // Suggested order (packs) → top up to one month of par.
-  let suggested = null;
-  if (par !== null && par > 0) {
-    suggested = estPacks !== null ? Math.max(0, Math.ceil(par - estPacks)) : Math.ceil(par);
+  // Suggested order, in PACKS — because that is what you buy.
+  //
+  // Minimum and order-up-to are two different numbers: ordering back to the
+  // minimum means being under it again within the week. Top up to the minimum
+  // plus a month of usage where a usage figure exists, and plus one pack where
+  // it does not — never multiply an untrusted estimate (MINIMUM-STOCK.md).
+  //
+  // Where a figure is missing, say so instead of computing through the gap.
+  let suggested = null, blocked = null;
+  if (measureOnly)            blocked = 'counted, not reordered';
+  else if (minItems === null) blocked = 'no minimum set';
+  else if (!minOk)            blocked = 'minimum unconfirmed';
+  else if (packSize === null) blocked = 'needs a pack size';
+  else {
+    const have = estItems !== null ? estItems : 0;
+    // Clear the minimum, and where a usage figure exists carry a month beyond
+    // it so the next count does not land under the minimum again. Never less
+    // than one pack, because a fraction of a case cannot be bought.
+    //
+    // Stated as "minimum + one pack" rather than a target of minimum + a whole
+    // pack: with Blue Cloth's minimum of a quarter roll against a case of 6,
+    // a target of 6.25 rounds up to two cases — 12 rolls to cover a quarter.
+    const target = minItems + (usageMonthly !== null ? usageMonthly : 0);
+    suggested = have >= target ? 0 : Math.max(1, Math.ceil((target - have) / packSize));
   }
-  const cost = num(p.cost_price);
+  const cost = num(p.cost_price);                       // net, per pack
   const estCost = (suggested !== null && cost !== null) ? suggested * cost : null;
 
-  // Drift note (measured vs par).
+  // Drift: measured usage against the figure on record.
   let drift = null;
-  if (measuredMonthly !== null && par) {
-    if (measuredMonthly > par * DRIFT_RATIO) drift = `using ~${measuredMonthly.toFixed(1)}/mo vs par ${par}`;
-    else if (measuredMonthly < par / DRIFT_RATIO) drift = `using ~${measuredMonthly.toFixed(1)}/mo vs par ${par}`;
+  if (measuredMonthly !== null && storedMonthly) {
+    if (measuredMonthly > storedMonthly * DRIFT_RATIO || measuredMonthly < storedMonthly / DRIFT_RATIO) {
+      drift = `using ~${measuredMonthly.toFixed(1)} ${unit}/mo vs ${storedMonthly} on record`;
+    }
   }
 
-  return { p, par, estPacks, coverDays, lastTake, lastOrderDate, daysSinceOrder,
-           flag, suggested, estCost, measuredMonthly, drift };
+  return { p, unit, packSize, minItems, estItems, coverDays, lastTake, lastOrderDate,
+           daysSinceOrder, flag, suggested, blocked, estCost, usageMonthly,
+           measuredMonthly, usageNote, drift };
 }
 
 function computeAll() {
@@ -373,11 +433,22 @@ function computeAll() {
 // RENDER
 // ═══════════════════════════════════════════════════════════════════════════
 function flagBadge(f) {
-  const map = { now: ['flag-now', 'Order now'], soon: ['flag-soon', 'Order soon'], ok: ['flag-ok', 'OK'], none: ['flag-none', 'No data'] };
+  const map = {
+    now:  ['flag-now',  'Order now'],
+    soon: ['flag-soon', 'Order soon'],
+    ok:   ['flag-ok',   'OK'],
+    none: ['flag-none', 'No data'],
+    measure: ['flag-none', 'Measure only'],
+  };
   const [cls, label] = map[f] || map.none;
   return `<span class="flag ${cls}">${label}</span>`;
 }
 const coverTxt = d => d === null ? '—' : (d >= 999 ? '999d+' : Math.round(d) + 'd');
+
+// Counts and minimums can be fractional (half a bottle, a quarter roll), so
+// trim rather than pad: 32, 0.25, 3.5 — never "32.00".
+const qty = (v, unit) => v === null || v === undefined
+  ? '—' : (Math.round(Number(v) * 100) / 100) + (unit ? ' ' + unit : '');
 
 function renderKPIs(metrics) {
   const now = new Date();
@@ -417,10 +488,11 @@ function renderPredict(metrics) {
   document.getElementById('predictTbody').innerHTML = groupRows(metrics, m => `<tr>
     <td style="font-weight:600;">${m.p.display_name}</td>
     <td>${m.p.supplier || '—'}</td>
-    <td style="text-align:right;">${m.estPacks !== null ? m.estPacks.toFixed(1) : '—'}</td>
-    <td style="text-align:right;">${m.par !== null ? m.par : '—'}</td>
+    <td style="text-align:right;">${qty(m.estItems, m.unit)}</td>
+    <td style="text-align:right;">${qty(m.minItems)}</td>
     <td style="text-align:right;">${coverTxt(m.coverDays)}</td>
-    <td style="text-align:right;font-weight:600;">${m.suggested ? m.suggested : '—'}</td>
+    <td style="text-align:right;font-weight:600;">${m.suggested
+      ? m.suggested : (m.blocked ? `<span class="drift">${m.blocked}</span>` : '—')}</td>
     <td style="text-align:right;">${gbp(m.estCost)}</td>
     <td style="text-align:center;">${flagBadge(m.flag)}</td>
   </tr>`);
@@ -428,26 +500,49 @@ function renderPredict(metrics) {
 }
 
 function renderShoppingList(metrics) {
-  const due = products.map(p => metrics[p.product_name_raw]).filter(m => m.flag === 'now' && m.suggested);
+  const all = products.map(p => metrics[p.product_name_raw]);
+  const due = all.filter(m => m.flag === 'now' && m.suggested);
+  // Short, but the quantity cannot be worked out. The decision to order is
+  // sound even where the amount is not, so these are listed rather than hidden.
+  const stuck = all.filter(m => m.flag === 'now' && !m.suggested && m.blocked);
   const el = document.getElementById('shoppingList');
-  if (!due.length) { el.innerHTML = '<em>Nothing due — everything is above par.</em>'; return; }
-  const bySup = {};
-  due.forEach(m => { (bySup[m.p.supplier || 'Unspecified'] ||= []).push(m); });
-  let grand = 0;
+
   let html = '';
-  Object.keys(bySup).sort().forEach(sup => {
-    const items = bySup[sup];
-    const subtotal = items.reduce((s, m) => s + (m.estCost || 0), 0);
-    grand += subtotal;
-    html += `<div style="margin-top:6px;"><strong style="color:#e8c547;">${sup}</strong> — ${gbp(subtotal)}<br>`;
-    html += items.map(m => {
-      const link = (m.p.order_url && /^https?:\/\//.test(m.p.order_url))
-        ? ` <a class="link" href="${m.p.order_url}" target="_blank" rel="noopener">↗</a>` : '';
-      return `&nbsp;&nbsp;• ${m.p.display_name} × ${m.suggested} pack${m.suggested === 1 ? '' : 's'} (${gbp(m.estCost)})${link}`;
-    }).join('<br>');
+  if (!due.length) {
+    html += '<em>Nothing due — everything is above its minimum.</em>';
+  } else {
+    const bySup = {};
+    due.forEach(m => { (bySup[m.p.supplier || 'Unspecified'] ||= []).push(m); });
+    let grand = 0;
+    Object.keys(bySup).sort().forEach(sup => {
+      const items = bySup[sup];
+      const subtotal = items.reduce((s, m) => s + (m.estCost || 0), 0);
+      grand += subtotal;
+      html += `<div style="margin-top:6px;"><strong style="color:#e8c547;">${sup}</strong> — ${gbp(subtotal)}<br>`;
+      html += items.map(m => {
+        const d = m.p.order_url || '';
+        // The shopping list is the one place the full supplier description
+        // belongs — it is what tells you which product to actually buy.
+        const link = /^https?:\/\//.test(d)
+          ? ` <a class="link" href="${d}" target="_blank" rel="noopener">↗</a>`
+          : (d ? ` <span class="drift">${d}</span>` : '');
+        // Where a pack holds one item, the pack IS the item: "× 2 bottles",
+        // not "× 2 packs = 2 bottles".
+        const amount = m.packSize > 1
+          ? `${m.suggested} pack${m.suggested === 1 ? '' : 's'} = ${qty(m.suggested * m.packSize, m.unit)}`
+          : qty(m.suggested, m.unit);
+        return `&nbsp;&nbsp;• ${m.p.display_name} × ${amount} (${gbp(m.estCost)})${link}`;
+      }).join('<br>');
+      html += '</div>';
+    });
+    html += `<div class="shop-total" style="margin-top:8px;">Estimated total, net: ${gbp(grand)}</div>`;
+  }
+
+  if (stuck.length) {
+    html += `<div style="margin-top:10px;"><strong style="color:#fb923c;">Short, but not orderable yet</strong><br>`;
+    html += stuck.map(m => `&nbsp;&nbsp;• ${m.p.display_name} — ${m.blocked}`).join('<br>');
     html += '</div>';
-  });
-  html += `<div class="shop-total" style="margin-top:8px;">Estimated total: ${gbp(grand)}</div>`;
+  }
   el.innerHTML = html;
 }
 
@@ -455,11 +550,14 @@ function renderStock(metrics) {
   document.getElementById('stockTbody').innerHTML = groupRows(metrics, m => `<tr>
     <td style="font-weight:600;">${m.p.display_name}</td>
     <td>${m.p.subcategory || '—'}</td>
-    <td style="text-align:right;">${m.lastTake ? Number(m.lastTake.actual_count) : '—'}</td>
+    <td style="text-align:right;">${m.lastTake ? qty(m.lastTake.actual_count, m.unit) : '—'}</td>
     <td>${m.lastTake ? m.lastTake.take_date : '—'}</td>
-    <td style="text-align:right;">${m.estPacks !== null ? m.estPacks.toFixed(1) : '—'}</td>
-    <td style="text-align:right;">${m.par !== null ? m.par : '—'}</td>
-    <td>${m.drift ? `<span class="drift">⚠ ${m.drift}</span>` : (m.measuredMonthly !== null ? 'on par' : '—')}</td>
+    <td style="text-align:right;">${qty(m.estItems, m.unit)}</td>
+    <td style="text-align:right;">${qty(m.minItems)}</td>
+    <td>${m.drift ? `<span class="drift">⚠ ${m.drift}</span>`
+       : m.usageNote ? `<span class="drift">${m.usageNote}</span>`
+       : m.measuredMonthly !== null ? `~${m.measuredMonthly.toFixed(1)} ${m.unit}/mo`
+       : '—'}</td>
   </tr>`);
 }
 

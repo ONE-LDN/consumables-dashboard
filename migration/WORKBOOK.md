@@ -1,0 +1,470 @@
+# The consumables workbook
+
+**Google Sheet:** [ONE LDN Consumables Catalogue and Stock Take v2](https://docs.google.com/spreadsheets/d/1ieGFxfZxttaYWwjq1XobvYwfqjUce1jMxhm_UNilK3k/edit)
+(`1ieGFxfZxttaYWwjq1XobvYwfqjUce1jMxhm_UNilK3k`)
+
+One workbook holds the catalogue, the weekly count and the delivery log. The
+Apps Script pushes it to Supabase; the dashboard reads Supabase. **Nothing is
+maintained in two places** — that is the whole point of folding the catalogue
+into the stock take sheet.
+
+```
+Products tab ──► Stock Count tab      (VLOOKUP, live)
+     │      ──► Order Log dropdown    (rebuilt on demand)
+     │
+     └─ syncProducts ──► Supabase ──► dashboard
+```
+
+> ⚠ **Delete the five superseded sheets:** `1linoZ_oo…`, `1xGKdynO2…`,
+> `1CvPuwat…`, `1R_uIZfM…` and `13hUhCIw…`. Each is an earlier draft with
+> different columns, a different product set, or stale rows. Several
+> near-identical sheets is how a count ends up in the wrong place.
+>
+> The "v2" in the title is only there to tell it apart from its predecessors —
+> drop it once the others are gone.
+
+Generated from `products_v4.csv` by `scripts/build_workbook.py`. Regenerate and
+re-paste when the product list changes; do not hand-edit the CSVs.
+
+| CSV | tab |
+|---|---|
+| `products_tab.csv` | `Products` — 30-line catalogue |
+| `stock_count_sheet.csv` | `Stock Count` — weekly count |
+| `order_log_tab.csv` | `Order Log` — deliveries, in packs |
+
+First aid is **not** in the workbook yet: separate 33-line list, quarterly
+cadence, data ready in `first_aid_v4.csv` (PLAN-V4 §8).
+
+---
+
+## Setting it up
+
+1. Rename the imported tab to **`Products`**.
+2. **Extensions ▸ Apps Script**, paste `apps-script/Code.gs`, save. Reload the
+   sheet; a **Consumables** menu appears.
+3. Menu ▸ **② Rebuild Stock Count sheet** — creates the tab, formatted, with the
+   lookups wired up.
+4. Menu ▸ **④ Rebuild Order Log sheet** — creates the tab with the product
+   dropdown, then paste `order_log_tab.csv`'s six rows (the 07/08 deliveries).
+
+None of that needs Supabase. Only steps ① and ③/⑤ talk to the database, and
+they need the script properties in `apps-script/SETUP.md` first.
+
+---
+
+## `Products` — the catalogue
+
+Hand-maintained. One row per product, 30 rows, 17 columns.
+
+| col | | |
+|---|---|---|
+| A | `product_name_raw` | **the sync key. Never edit it.** Renaming it orphans every count and delivery for that product |
+| B | Product name | what appears on the count sheet and the dashboard |
+| C | Category | product type |
+| D | Location | where you count it |
+| E | Count unit | what a count of 1 means |
+| F | Count step | smallest fraction to record — `1`, `0.5` or `0.25` |
+| G | Supplier | |
+| H | Product description | the long supplier description — for ordering, not display |
+| I | Pack size | items per order unit |
+| J | Price per pack | **net of VAT** |
+| K | Par qty | as written |
+| L | Par unit | `packs` or `items` |
+| M | Min override | a stated requirement, in items |
+| N | **Minimum** | **formula** — items |
+| O | Min confirmed | `yes` / `no` |
+| P | Order class | `reorder` / `measure_only` |
+| Q | Notes | |
+
+### Minimum is a formula
+
+```
+=IF(M<>"", M, IF(K="","", IF(L="packs", IF(I="","", K*I), K)))
+```
+
+Override if one is set, else Par × Pack size when the par is in packs, else the
+par as written. **Change a par or a pack size and the minimum follows** — which
+is the reason for one workbook rather than three.
+
+One row carries an override, from the sheet's own notes, because an
+explicitly-stated human requirement beats the computed candidate
+(`MINIMUM-STOCK.md`): **D Batteries** 10, where Par × Pack gives 8. Every other
+row's formula reproduces the agreed v4 minimum exactly.
+
+A blank par gives a **blank** minimum, never `0`. "No minimum set" and "a
+minimum of zero" are different claims, and the dashboard is meant to refuse to
+compute rather than show a confident wrong number.
+
+### Category and Location are different axes
+
+The v4 sheet had one `Category` column that mixed them — `Toiletries` is a
+product type, `Gym Floor` is a place. This is the split PLAN-V4 called for.
+
+`Location` keeps the v4 values and drives the count walk: FOH Desk (6) → Cafe
+(3) → Gym Floor (2) → Toiletries (14) → Staff Room (4) → Plant room (1).
+
+`Category` is derived from the products themselves: Cleaning (8), Toiletries
+(7), Washroom (4), Facilities (3), Member Supplies (3), Stationery (3), Gym (2).
+
+The split earns its keep where the two disagree: **D Batteries** are Category
+`Gym` (they run the ergs), Location `FOH Desk` (that is where the drawer is).
+
+⚠ Seven rows read `Toiletries | Toiletries` — the v4 location for the changing
+rooms is the same word as the product type. Worth renaming the location to
+`Changing Rooms`. Cosmetic, not a data problem.
+
+### Prices are net
+
+Four prices were corrected on import. v4 carried **£25.19** for the Out of Eden
+toiletries, which is VAT-inclusive: `20.99 × 1.20 = 25.19`. The 2026-08-07
+invoice states £20.99 net, and the Futures prices in the same column (£11.31,
+£26.98) match their invoice net to the penny. `hand_wash`, `conditioner`,
+`moisturiser` and `shampoo` are now **£20.99**, flagged in Notes.
+
+Out of Eden also discounts by line (5% and 10% on that invoice), so the price
+paid is not the list price. The catalogue holds list net; the discount belongs
+on the delivery record.
+
+---
+
+## `Stock Count` — the weekly count
+
+| col | | |
+|---|---|---|
+| A | Product name | the join key |
+| B | Category | VLOOKUP |
+| C | Location | VLOOKUP |
+| D | **Count** | the only column anyone types in |
+| E | Unit | VLOOKUP |
+| F | Record to | VLOOKUP — "whole cans", "nearest 0.25 bottles" |
+
+`B1` take date (must be a real date), `B2` counted by, header row 3, products
+from row 4 in walk order.
+
+Category, Location, Unit and Record to look themselves up from `Products`
+**per row, keyed on the name beside them**. Edit the catalogue and the count sheet follows.
+
+Keyed per row deliberately: a whole-range formula would re-sort the product
+names without moving the counts beside them, filing every count against the
+wrong product. Only **adding or removing** a product needs a rebuild (menu ②).
+
+### No `product_name_raw` column
+
+Saffron's call: the slug stays on `Products`, not on the sheet people count
+into. `submitCounts()` joins on the product name against the `Products` tab.
+
+The cost, stated plainly: **renaming a product on the count sheet breaks the
+join.** So it fails loudly — `submitCounts()` **refuses the entire submission**
+if any name fails to match, and names the offenders. A partial count reads as a
+real count and would corrupt usage for every product that silently dropped out.
+`syncProducts()` enforces the other half, rejecting duplicate keys or names.
+
+### Counting rules
+
+Two of the shop sheet's rules are wrong here and would corrupt the baseline:
+
+- **Decimals are correct and expected.** Half a 5L bottle is `0.5`.
+  `actual_count` is `numeric`.
+- **Count in items, never packs.** 24 rolls, not 4 packs. Column E says which.
+
+### Products counted by eye
+
+Some products are judged, not tallied — you look at a 5L bottle and decide it is
+about half full. `Count step` says how finely to judge each one, and column F of
+the count sheet turns it into an instruction: **"whole cans"** or
+**"nearest 0.25 bottles"**.
+
+**The step is set by the minimum, not by the product.** A quarter of a toilet
+roll is noise against a minimum of 24. A quarter of a 5L bottle is half the gap
+between "fine" and "reorder" when the minimum is 2. So a product needs a fine
+step only where the fraction can change the answer.
+
+| step | rows | |
+|---|---|---|
+| `0.25` | 12 | 5L bottles, tubs, part-used rolls, chalk blocks |
+| `0.5` | 1 | Printer Paper — half a ream is judgeable by thickness, a quarter is not |
+| `1` | 17 | anything you can tally |
+
+Two things this does **not** fix, and both matter more than the column does:
+
+**Opaque containers cannot be judged at all.** You can see you have 3 aerosols;
+you cannot see how full they are. Air Freshener and both Deodorants stay at
+whole units, and a part-used can counts as a whole one until it is empty. Their
+true stock is always somewhat less than the count says — a bias, not noise, and
+it never averages out.
+
+**Precision is not accuracy.** Writing `0.25` does not make the eye better than
+about a quarter. And usage is a *difference* of two counts, so it carries
+roughly **twice** the single-count error: two quarter-accurate counts give a
+usage figure good to about ±0.5 of a bottle. Where the real weekly movement is
+one bottle, that is a 50% error on the number the whole ordering model rests on.
+
+The consequence is a reading rule, not a data-entry rule:
+
+> **For eyeballed products, do not read usage from one week.** Read it over a
+> window long enough that the total movement is several times the count step —
+> a month or a quarter for the 5L refills. Weekly counts still catch a stockout;
+> they just cannot measure a slow burn.
+
+This is the same effect PLAN-V4 flagged as "a weekly count only resolves about
+one unit", sharpened: for eyeballed products it resolves about *two steps*, and
+for opaque ones it cannot resolve part-used stock at all.
+
+Unchanged, and still the rules that matter most:
+
+- **Blank means "not counted". `0` means "counted, none left."**
+- **Every delivery goes in the Order Log.** Usage is
+  `opening + orders_between − closing`; an unlogged delivery makes it lie.
+
+---
+
+## `Order Log` — deliveries
+
+`Date | Product | Packs ordered | Unit cost £ (optional) | Supplier (optional) | Notes`.
+Quantities in **packs**. Product is a dropdown built from `Products`, so no
+order can name something submit will reject.
+
+⑤ submits to `shop_consumable_deliveries` and then clears the rows — the log is
+an inbox, not the archive. Rebuilding the tab (④) does **not** clear it, so an
+entered-but-unsubmitted delivery survives a catalogue edit.
+
+---
+
+## What the script does now
+
+Everything reads the `Products` tab; nothing reads the catalogue back out of
+Supabase. The workbook is the master, so a round trip through the database to
+rebuild a tab would only create a way for the two to disagree.
+
+| function | reads | writes |
+|---|---|---|
+| ① `syncProducts` | Products | `shop_product_lookup` |
+| ② `buildCountSheet` | Products | Stock Count tab |
+| ③ `submitCounts` | Stock Count + Products | `shop_stock_takes` |
+| ④ `buildOrderSheet` | Products | Order Log header + dropdown |
+| ⑤ `submitOrders` | Order Log + Products | `shop_consumable_deliveries` |
+
+⚠ `syncProducts` still **deactivates the whole `Consumables` category before
+upserting**. With column A present that is correct — it is what deactivates the
+4 intended drops. Never run it against a Products tab whose keys have not been
+checked.
+
+### Supabase columns needed before ① will run
+
+`product_type` **already exists** and takes `Category` directly. Three do not:
+
+```sql
+alter table shop_product_lookup add column count_unit          text;
+alter table shop_product_lookup add column count_step          numeric;
+alter table shop_product_lookup add column min_confirmed       boolean;
+alter table shop_product_lookup add column order_class         text;
+alter table shop_product_lookup add column monthly_usage_units numeric;
+
+-- REQUIRED: minimums can be fractional. Blue Cloth's is a quarter of a roll.
+alter table shop_product_lookup alter column min_stock_units type numeric;
+```
+
+**All six statements, or none.** `index.html` names every one of those columns in
+its select, so the dashboard 400s and renders nothing until they all exist. That
+is the intended failure — it cannot show a stale or half-populated number — but
+it does mean a partial run leaves the page blank rather than degraded.
+
+`product_type` already exists and takes `Category` directly. `monthly_par_packs`
+stops being read by anything and can be dropped later, once nothing references
+it.
+
+⚠ **`min_stock_units` is currently `integer` and must become `numeric`.**
+`actual_count` is already numeric — half a bottle is a real count of `0.5` — so
+comparing a fractional count against an integer minimum is the same
+units-mismatch that has bitten this project twice. `syncProducts` now sends the
+minimum through `_num`, not `_int`: rounding `0.25` to `0` would silently turn
+*"reorder at a quarter roll"* into *"never reorder"*. Until the column is
+numeric, Postgres rejects the row outright, which is the safe failure.
+
+Add these alongside `monthly_usage_units` from PLAN-V4 §6. Until they exist,
+`syncProducts` fails with a PostgREST error naming the missing column — which is
+the intended behaviour, not a silent partial write.
+
+`min_stock_units` already exists and is `integer`; `monthly_par_packs` stops
+being written.
+
+## Changes taken 2026-08-12
+
+`products_v4.csv` stays a faithful record of what the v4 sheet said. These are
+decisions on top of it, held as explicit constants in `build_workbook.py`, so
+the diff between the sheet and the catalogue is always readable. **35 → 30
+products.**
+
+| | |
+|---|---|
+| **Urinal Shields** | removed |
+| **Notepads** | removed |
+| **Printer inks** | the four single-colour rows merged into one, `printer_ink` |
+| **Pens** | product link added; pack size and price still needed |
+| **Key Fobs** | pack size and price now evidenced |
+
+### The ink merge
+
+The supplied invoice settles it: **SODFACE TN248**, compatible with Brother
+TN248XL, sold as a **4-pack** at **£38.32 net** (£45.99 gross, ×1.20 ✓). The
+four colours were always one purchase, so one row is what the ordering actually
+looks like.
+
+Each of the four rows had a par of 1 cartridge, so the merged par of 1 pack —
+4 cartridges — is the same requirement stated once, not a new one.
+
+**It also closes a standing question.** The old `printer_ink_blk` row carried
+**£224.90**, which the session log flagged as *"looks like a multipack booked
+against a single cartridge"*. It is not that either: the pack costs £38.32.
+£224.90 is simply wrong, and is not carried forward.
+
+What the merge costs: one row cannot tell you that *yellow specifically* has run
+out. Tolerable only because ink is `measure_only` — counted to spot it going
+missing, never auto-ordered. Worth revisiting now that a real price and pack
+size exist: toner is genuinely consumed by printing, unlike the key fobs it was
+grouped with, so `reorder` may be the better class.
+
+### Key fobs
+
+The procurement quote reconciles exactly: **500 × £3.59 = £1,795.00** net,
+plus **£68.01** delivery = **£1,863.01** ex VAT, ×1.20 = **£2,235.61** inc.
+
+So `key_fobs` now carries **pack size 1** at **£3.59 net** — the quote prices
+per fob, and 500 was the order quantity, not the pack. That **retires correction
+#5 from the first session**, which struck out a pack size of 1 for fobs as
+invented. It is no longer invented; it is on an invoice.
+
+**Reclassified `measure_only` → `reorder`.** It sat with the printer inks on the
+grounds that such things go missing rather than being consumed. But the 04/08
+count found **zero fobs**, there is now a unit price, and a minimum on a
+`measure_only` row does nothing at all — the dashboard excludes that class from
+"order now" (PLAN-V4 §7.6). The 50-fob minimum only has teeth as `reorder`.
+
+Two caveats kept in Notes: the quote does not name the vendor (the part is
+Gantner standard, `G-756026`), and a minimum order quantity may apply — 500 is
+the only purchase on record, so a 50-fob order may not be placeable as such.
+
+### Minimums set 2026-08-12
+
+All stated outright in items, so all are `Par unit = items`. No usage history
+exists for any of them; these are stated requirements, which under
+`MINIMUM-STOCK.md` beat every computed candidate.
+
+| product | minimum | on hand 04/08 | |
+|---|---|---|---|
+| Pens | 2 pens | 12 | ok |
+| Air Freshener Spray | 2 cans | 3 | ok |
+| Ice Bath Sanitiser | 1 tub | 3 | ok |
+| **Key Fobs** | 50 fobs | **0** | **short 50 — £179.50 net** |
+| **Nitrile Gloves (L)** | 50 gloves | **0** | **short 50 — 1 pack** |
+| **Blue Cloth Roll** | 0.25 roll | **0** | **short — 1 case of 6, £11.98** |
+| Wet Kit Bags | 1 roll | *see below* | basis changed |
+
+**This clears the last four `min_confirmed = no` rows**, so nothing in the
+catalogue now carries an unconfirmed minimum and nothing has a blank par.
+
+Two of these answers do more than set a number:
+
+**Nitrile Gloves — 50 settles the minimum without settling the pack size.** 50 is
+a quarter of a 200-pack or half a 100-pack, so it holds whichever the pack size
+turns out to be. The long-running 200-vs-100 question no longer blocks the
+minimum; it still blocks sizing the order.
+
+**Wet Kit Bags — the count unit changes from bags to rolls.** They are on rolls,
+one in each of the male and female toilets, and the minimum is half of the two.
+
+**The 04/08 count of 3 was 3 rolls** (Saffron, 2026-08-12), not 3 individual
+bags as the earlier session recorded. So the baseline reads correctly under the
+new unit, needs no recount — and **3 rolls against a 1-roll minimum means this
+line is not short. It leaves the reset order**, where PLAN-V4 §2a had it listed
+as below minimum with the quantity "TBC".
+
+Bags per roll is still unknown, so no order could be sized anyway: the count is
+in rolls and the pack of 250 is in bags, with no bridge between them. That now
+blocks nothing, since nothing needs ordering.
+
+### Effect on the next `syncProducts` run
+
+39 live consumables today → **30**. Nine deactivate, three are created:
+
+| | |
+|---|---|
+| deactivate (already planned) | `plastic_food_bags`, `clinell_wipes`, `kleenex_tissues`, `dispenser_pumps` |
+| deactivate (new today) | `urinal_shields` |
+| deactivate (replaced by `printer_ink`) | `printer_ink_blk`, `printer_ink_pink`, `printer_ink_blue`, `printer_ink_yellow` |
+| move to First Aid | `blue_plasters`, `hs_refills`, `ice_packs` |
+| created | `paper_printer`, `pens`, `printer_ink` |
+
+`39 − 4 − 1 − 4 − 3 + 3 = 30`. **Notepads never reached Supabase** — it was one
+of PLAN-V4's three new rows and was dropped before the first sync, so there is
+nothing to deactivate; it simply never gets created.
+
+All nine deactivations are intended. Step 7's verification is a confirmation,
+not a check for a mistake.
+
+---
+
+## The dashboard
+
+`index.html` was switched to items in the same change, because a sheet counting
+in items against a dashboard computing in packs is worse than either alone.
+
+| | |
+|---|---|
+| **the bug** | usage added `qty_cases` (packs) to `actual_count` (items). One bin-bag pack read as 1 bag, not 200. Both delivery reductions now convert with `pack_size` |
+| pack size source | the size recorded **on the delivery**, falling back to the catalogue — what arrived is what arrived, and the catalogue can change after |
+| no pack size | the delivery cannot be converted, so usage and est stock stay blank with the reason shown, rather than adding packs to items |
+| units | counts, minimums and usage in items, rendered with the unit; suggested orders in **packs** |
+| order size | clear the minimum, carry a month beyond where a usage figure exists, never less than one pack |
+| refusals | `measure_only` never reaches "order now"; an unconfirmed minimum shows status but withholds the quantity; a missing pack size blanks the order and says why |
+| count precision | movement under two `count_step`s reports as *within count precision* instead of becoming a usage figure |
+| integrity | stock rising with no logged delivery points at the Order Log instead of being discarded |
+| lead time | `LEAD_DAYS` 7 → **2**, confirmed with every supplier |
+
+**Order size is stated as "clear the minimum, plus a month where known" rather
+than a target of "minimum + one pack".** The literal version overshoots badly
+where the minimum is small against the pack: Blue Cloth's quarter-roll minimum
+against a case of 6 would target 6.25 and round up to **two cases — 12 rolls to
+cover a quarter of one**.
+
+### Tests
+
+`node tests/engine.test.js` — 29 cases over the model layer, extracted straight
+out of `index.html`, no dependencies and no build step.
+
+Every serious defect in this project has been a silent arithmetic error that
+produced a *plausible* number: packs added to items, a pack size guessed, a par
+validated against its own source, a fractional minimum rounded to zero. None of
+them looked wrong on screen. The cases that bit are pinned so they cannot return.
+
+Worth recording: two assertions written from memory while building this failed
+against the suite, and **the code was right both times** — a delivery predating
+the last count needs no conversion, and the cadence fallback correctly reads
+`ok` when an order landed a week ago. Reasoning about this engine unaided is not
+reliable, which is the argument for the file existing.
+
+Not covered by the tests: the render layer. That was checked separately in a
+browser against mocked Supabase responses — no console errors, fractional counts
+and unit labels correct, shopping list grouped by supplier with net totals.
+
+## Known gaps
+
+- **Bags per roll is unknown for Wet Kit Bags**, so no order can be sized: the
+  count is in rolls and the pack of 250 is in bags, with no bridge between them.
+  Not blocking anything today — the line is above its minimum.
+- **Water Softener Salt at £149.99 with no pack size.** Par Unit is `items`, so
+  the minimum is safe, but the price basis still swings a costed order by an
+  order of magnitude. Do not let it into an order until settled.
+- **3 products have no pack size**, so no order can be sized: Water Softener
+  Salt, Printer Paper, Pens. All three now have a minimum, so the shortfall is
+  visible even though the order quantity is not.
+- **Pens still need a pack size and price.** The listing is linked but Amazon
+  is unreachable from this environment, so neither could be read off it and
+  neither is guessed.
+- **Key fobs may have a minimum order quantity.** 500 is the only purchase on
+  record, so a 50-fob order may not be placeable as such.
+- `microfibre_cloths` Location is a placement, not a settled answer.
+- The `Category` values are mine, not the business's. Edit `CATEGORY` in
+  `scripts/build_workbook.py` and re-paste.
+- No data validation on `Par unit` / `Min confirmed` / `Order class`. CSV import
+  cannot set dropdowns; worth adding by hand.

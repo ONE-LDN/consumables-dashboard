@@ -8,8 +8,10 @@
  * TABS
  *   Products    — the master catalogue you maintain by hand (one row per item).
  *                 "Sync products to dashboard" pushes it into Supabase.
- *   Stock Count — weekly on-hand counts, in PACKS. "Submit stock count" writes
- *                 them to shop_stock_takes.
+ *   Stock Count — weekly on-hand counts, in ITEMS (the Unit column says what an
+ *                 item is for each product). "Submit stock count" writes them
+ *                 to shop_stock_takes. Decimals are valid: half a 5L bottle is
+ *                 0.5. Blank means "not counted"; 0 means "counted, none left".
  *   Order Log   — orders placed. "Submit order log" writes them to
  *                 shop_consumable_deliveries, then clears the entered rows.
  *
@@ -32,20 +34,34 @@ var CATEGORY       = 'Consumables';
 // Products-tab column headers (matched case-insensitively by name, so column
 // order can change without breaking the sync).
 var COL = {
-  key:      'product_name_raw',
-  name:     'display_name',
-  location: 'location',
-  supplier: 'supplier',
-  link:     'order_link_or_desc',
-  price:    'price_per_pack_gbp',
-  units:    'units_per_pack',
-  par:      'packs_per_month_par',
+  key:      'product_name_raw',   // the sync key — never edited by hand
+  name:     'Product name',
+  type:     'Category',           // what kind of thing it is
+  location: 'Location',           // where you count it
+  unit:     'Count unit',         // what a count of 1 means
+  step:     'Count step',         // smallest fraction to record: 1 | 0.5 | 0.25
+  supplier: 'Supplier',
+  link:     'Product description',
+  units:    'Pack size',          // items per order unit
+  price:    'Price per pack',     // NET of VAT
+  min:      'Minimum',            // items — a formula on the tab
+  minok:    'Min confirmed',      // yes | no
+  klass:    'Order class',        // reorder | measure_only
 };
 
 // Stock Count / Order Log layout
+// Stock Count columns are
+//   Product name | Category | Location | Count | Unit | Record to
+// Count is column 4 and there is no Notes column; see buildCountSheet().
 var COUNT_DATE_CELL = 'B1';   // take date
 var COUNT_HEADER_ROW = 3;
 var COUNT_FIRST_ROW  = 4;
+
+// The order you walk the building when counting. Rows are grouped by Location
+// in this sequence, not alphabetically.
+var COUNT_WALK_ORDER = [
+  'FOH Desk', 'Cafe', 'Gym Floor', 'Toiletries', 'Staff Room', 'Plant room',
+];
 var ORDER_HEADER_ROW = 1;
 var ORDER_FIRST_ROW  = 2;
 
@@ -89,10 +105,6 @@ function _fetch(path, options) {
   return body ? JSON.parse(body) : null;
 }
 
-function _sbGet(table, query) {
-  return _fetch('/rest/v1/' + table + '?' + query, { method: 'get' }) || [];
-}
-
 function _sbSend(method, table, query, payload, prefer) {
   return _fetch('/rest/v1/' + table + (query ? '?' + query : ''), {
     method: method,
@@ -117,32 +129,61 @@ function syncProducts() {
     if (i < 0) throw new Error('Products tab is missing the "' + name + '" column.');
     return i;
   }
-  var iKey = idx(COL.key), iName = idx(COL.name), iLoc = idx(COL.location),
-      iSup = idx(COL.supplier), iLink = idx(COL.link), iPrice = idx(COL.price),
-      iUnits = idx(COL.units), iPar = idx(COL.par);
+  var iKey = idx(COL.key), iName = idx(COL.name), iType = idx(COL.type),
+      iLoc = idx(COL.location), iUnit = idx(COL.unit), iSup = idx(COL.supplier),
+      iStep = idx(COL.step), iLink = idx(COL.link), iPrice = idx(COL.price),
+      iUnits = idx(COL.units), iMin = idx(COL.min), iMinOk = idx(COL.minok),
+      iKlass = idx(COL.klass);
 
-  var rows = [], seen = {};
+  var rows = [], seen = {}, dupes = [];
   for (var r = 1; r < values.length; r++) {
     var row = values[r];
     var key = String(row[iKey] || '').trim();
     if (!key) continue;
+    if (seen[key]) { dupes.push(key); continue; }
     seen[key] = true;
     rows.push({
       product_name_raw:  key,
       display_name:      String(row[iName] || key).trim(),
       brand:             '',
       category:          CATEGORY,
+      product_type:      String(row[iType] || '').trim() || null,
       subcategory:       String(row[iLoc] || '').trim() || null,
+      count_unit:        String(row[iUnit] || '').trim() || null,
+      // How finely this product can be judged by eye. Usage is a DIFFERENCE of
+      // two counts, so it carries roughly twice this as error — the dashboard
+      // needs it to know which usage figures are noise.
+      count_step:        _num(row[iStep]),
       supplier:          String(row[iSup] || '').trim() || null,
       order_url:         String(row[iLink] || '').trim() || null,
       cost_price:        _num(row[iPrice]),
       pack_size:         _int(row[iUnits]),
-      monthly_par_packs: _num(row[iPar]),
+      // Items, not packs, and NOT rounded: minimums can be fractional (a
+      // quarter of a roll is 0.25). _int here would silently turn "reorder at a
+      // quarter roll" into "never reorder". Requires min_stock_units to be
+      // numeric in Supabase — see WORKBOOK.md.
+      //
+      // Blank stays null: "no minimum set" and "a minimum of zero" are
+      // different claims and the dashboard treats them differently.
+      min_stock_units:   _num(row[iMin]),
+      min_confirmed:     String(row[iMinOk] || '').trim().toLowerCase() === 'yes',
+      order_class:       String(row[iKlass] || '').trim() || null,
       active:            true,
       stock_tracked:     false,
     });
   }
+  if (dupes.length) throw new Error('Duplicate product_name_raw on the Products tab: ' + dupes.join(', '));
   if (!rows.length) throw new Error('No product rows with a product_name_raw.');
+
+  // display_name is the join key for the count and order sheets, so a
+  // collision there breaks both. Catch it here rather than at submit time.
+  var byName = {}, nameDupes = [];
+  rows.forEach(function (p) {
+    var n = p.display_name.toLowerCase();
+    if (byName[n]) nameDupes.push(p.display_name);
+    byName[n] = true;
+  });
+  if (nameDupes.length) throw new Error('Duplicate Product name on the Products tab: ' + nameDupes.join(', '));
 
   // Reconcile: deactivate any consumable in the DB that is no longer in the
   // sheet (soft delete), scoped strictly to category=Consumables so shop/merch
@@ -155,10 +196,33 @@ function syncProducts() {
 }
 
 // ── ② Build / rebuild the Stock Count sheet from the live product set ────────
+//
+// Layout: Product name | Category | Location | Count | Unit.
+//
+// There is deliberately NO product_name_raw column — the slug lives on the
+// Products tab, not on the sheet people count into. submitCounts() joins on
+// display_name instead, which is why display_name must stay unique and must be
+// renamed in the catalogue rather than here.
+//
+// Category (what kind of thing) and Location (where you count it) are separate
+// axes. `subcategory` holds the location; `product_type` holds the category.
 function buildCountSheet() {
-  var products = _sbGet('shop_product_lookup',
-    'select=product_name_raw,display_name,subcategory&category=eq.' + CATEGORY +
-    '&active=eq.true&order=subcategory,display_name');
+  // Built from the Products tab, not from Supabase. The workbook is the master,
+  // so the count sheet should not need a round trip through the database to
+  // rebuild — and this works before Supabase is set up at all.
+  var products = _readProducts();
+
+  // Count a room at a time. A list that jumps between rooms gets counted wrong,
+  // so the walk beats alphabetical order. Unknown locations sort to the end
+  // rather than vanishing.
+  products.sort(function (a, b) {
+    var ia = COUNT_WALK_ORDER.indexOf(a.location);
+    var ib = COUNT_WALK_ORDER.indexOf(b.location);
+    if (ia < 0) ia = COUNT_WALK_ORDER.length;
+    if (ib < 0) ib = COUNT_WALK_ORDER.length;
+    if (ia !== ib) return ia - ib;
+    return a.name.localeCompare(b.name);
+  });
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(COUNT_SHEET) || ss.insertSheet(COUNT_SHEET);
@@ -167,18 +231,76 @@ function buildCountSheet() {
   sh.getRange('A1').setValue('Take date:');
   sh.getRange(COUNT_DATE_CELL).setValue(new Date());
   sh.getRange(COUNT_DATE_CELL).setNumberFormat('yyyy-mm-dd');
+  sh.getRange('A2').setValue('Counted by:');
 
-  var headers = ['product_name_raw', 'Product', 'Location', 'Count (packs)', 'Notes'];
+  var headers = ['Product name', 'Category', 'Location', 'Count', 'Unit', 'Record to'];
   sh.getRange(COUNT_HEADER_ROW, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
 
-  var out = products.map(function (p) {
-    return [p.product_name_raw, p.display_name || p.product_name_raw, p.subcategory || '', '', ''];
+  // Category, Location and Unit look themselves up from Products, per row, so
+  // editing the catalogue flows through without rebuilding. Keyed on the name
+  // in the same row on purpose: a whole-range formula would re-sort the names
+  // without moving the counts beside them.
+  var out = products.map(function (p, i) {
+    var r = COUNT_FIRST_ROW + i;
+    var range = PRODUCTS_SHEET + '!$B:$F';
+    function look(col) {
+      return '=IFERROR(VLOOKUP($A' + r + ',' + range + ',' + col + ',FALSE),"")';
+    }
+    // 'whole cans' / 'nearest 0.25 bottles' — an instruction, not a number.
+    var step = '=IFERROR(IF(VLOOKUP($A' + r + ',' + range + ',5,FALSE)=1,' +
+               '"whole "&VLOOKUP($A' + r + ',' + range + ',4,FALSE),' +
+               '"nearest "&TEXT(VLOOKUP($A' + r + ',' + range + ',5,FALSE),"0.##")' +
+               '&" "&VLOOKUP($A' + r + ',' + range + ',4,FALSE)),"")';
+    return [p.name, look(2), look(3), '', look(4), step];
   });
   if (out.length) sh.getRange(COUNT_FIRST_ROW, 1, out.length, headers.length).setValues(out);
 
-  sh.hideColumns(1);
+  // Count is the only column anyone types in; the rest is reference.
+  sh.getRange(COUNT_HEADER_ROW, 1, out.length + 1, 3).setBackground('#f3f3f3');
+  sh.getRange(COUNT_HEADER_ROW, 5, out.length + 1, 2).setBackground('#f3f3f3');
   sh.setFrozenRows(COUNT_HEADER_ROW);
+  sh.autoResizeColumns(1, headers.length);
   SpreadsheetApp.getUi().alert('Stock Count sheet rebuilt with ' + out.length + ' products.');
+}
+
+// Read the Products tab into plain objects. One reader for every function that
+// needs the catalogue, so the header names are resolved in exactly one place.
+function _readProducts() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(PRODUCTS_SHEET);
+  if (!sh) throw new Error('No "' + PRODUCTS_SHEET + '" tab found.');
+  var values = sh.getDataRange().getValues();
+  if (values.length < 2) throw new Error('Products tab is empty.');
+
+  var header = values[0].map(function (h) { return String(h).trim().toLowerCase(); });
+  function idx(name) {
+    var i = header.indexOf(name.toLowerCase());
+    if (i < 0) throw new Error('Products tab is missing the "' + name + '" column.');
+    return i;
+  }
+  var iKey = idx(COL.key), iName = idx(COL.name), iType = idx(COL.type),
+      iLoc = idx(COL.location), iUnit = idx(COL.unit), iStep = idx(COL.step),
+      iSup = idx(COL.supplier), iPrice = idx(COL.price), iUnits = idx(COL.units),
+      iKlass = idx(COL.klass);
+
+  var out = [];
+  for (var r = 1; r < values.length; r++) {
+    var row = values[r];
+    var key = String(row[iKey] || '').trim();
+    if (!key) continue;
+    out.push({
+      key:        key,
+      name:       String(row[iName] || key).trim(),
+      type:       String(row[iType] || '').trim(),
+      location:   String(row[iLoc] || '').trim(),
+      unit:       String(row[iUnit] || '').trim(),
+      step:       _num(row[iStep]),
+      supplier:   String(row[iSup] || '').trim(),
+      price:      _num(row[iPrice]),
+      pack_size:  _int(row[iUnits]),
+      order_class: String(row[iKlass] || '').trim(),
+    });
+  }
+  return out;
 }
 
 // ── ③ Submit stock counts → shop_stock_takes (upsert by product + date) ──────
@@ -194,20 +316,40 @@ function submitCounts() {
   if (last < COUNT_FIRST_ROW) throw new Error('No product rows.');
   var data = sh.getRange(COUNT_FIRST_ROW, 1, last - COUNT_FIRST_ROW + 1, 5).getValues();
 
-  var payload = [];
-  data.forEach(function (row) {
-    var key = String(row[0] || '').trim();
-    var count = row[3];
-    if (key && count !== '' && count !== null && !isNaN(count)) {
-      payload.push({
-        product_name_raw: key,
-        take_date:        takeDate,
-        actual_count:     Number(count),
-        notes:            String(row[4] || '').trim() || null,
-        source:           'sheet',
-      });
-    }
+  // The count sheet carries no slug column, so the product name is the join
+  // key. Resolved against the Products tab — the workbook's own catalogue —
+  // rather than against Supabase, so the two can never disagree.
+  var keyByName = {};
+  _readProducts().forEach(function (p) {
+    keyByName[p.name.toLowerCase()] = p.key;
   });
+
+  var payload = [];
+  var unmatched = [];
+  data.forEach(function (row) {
+    var name = String(row[0] || '').trim();
+    var count = row[3];
+    if (!name || count === '' || count === null || isNaN(count)) return;
+    var key = keyByName[name.toLowerCase()];
+    if (!key) { unmatched.push(name); return; }
+    payload.push({
+      product_name_raw: key,
+      take_date:        takeDate,
+      actual_count:     Number(count),
+      source:           'sheet',
+    });
+  });
+
+  // Refuse the whole submission rather than silently dropping the rows that did
+  // not match. A partial count reads as a real count and corrupts the usage
+  // arithmetic for every product that went missing.
+  if (unmatched.length) {
+    throw new Error(
+      'These product names are not in the catalogue, so nothing was submitted:\n  ' +
+      unmatched.join('\n  ') +
+      '\n\nRename products on the Products tab and rebuild the Stock Count sheet — ' +
+      'not here.');
+  }
   if (!payload.length) { SpreadsheetApp.getUi().alert('No counts entered.'); return; }
 
   _sbSend('POST', 'shop_stock_takes', 'on_conflict=product_name_raw,take_date',
@@ -224,14 +366,16 @@ function clearCounts() {
 
 // ── ④ Build / rebuild the Order Log entry sheet ──────────────────────────────
 function buildOrderSheet() {
-  var products = _sbGet('shop_product_lookup',
-    'select=display_name&category=eq.' + CATEGORY + '&active=eq.true&order=display_name');
-  var names = products.map(function (p) { return p.display_name; });
+  // From the Products tab, so the dropdown matches the catalogue exactly and
+  // no order can name a product that submitOrders will then reject.
+  var names = _readProducts().map(function (p) { return p.name; }).sort();
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(ORDER_SHEET) || ss.insertSheet(ORDER_SHEET);
-  sh.clear();
-
+  // Only the header and the dropdown are rewritten — no sh.clear(). Rebuilding
+  // the dropdown after a catalogue edit must not discard rows that have been
+  // entered but not yet submitted; usage is opening + orders_between − closing,
+  // so a delivery lost before it reaches Supabase makes the arithmetic lie.
   var headers = ['Date', 'Product', 'Packs ordered', 'Unit cost £ (optional)', 'Supplier (optional)', 'Notes'];
   sh.getRange(ORDER_HEADER_ROW, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
   sh.setFrozenRows(ORDER_HEADER_ROW);
@@ -251,12 +395,10 @@ function submitOrders() {
   var last = sh.getLastRow();
   if (last < ORDER_FIRST_ROW) { SpreadsheetApp.getUi().alert('No orders entered.'); return; }
 
-  // Resolve display_name → product_name_raw / subcategory / pack_size / cost.
-  var lookup = _sbGet('shop_product_lookup',
-    'select=product_name_raw,display_name,subcategory,pack_size,cost_price,supplier&category=eq.' +
-    CATEGORY + '&active=eq.true');
+  // Resolve product name → key / location / pack size / cost, from the
+  // Products tab rather than Supabase, for the same reason as submitCounts.
   var byName = {};
-  lookup.forEach(function (p) { byName[String(p.display_name).trim().toLowerCase()] = p; });
+  _readProducts().forEach(function (p) { byName[p.name.toLowerCase()] = p; });
 
   var data = sh.getRange(ORDER_FIRST_ROW, 1, last - ORDER_FIRST_ROW + 1, 6).getValues();
   var payload = [], errors = [];
@@ -271,11 +413,11 @@ function submitOrders() {
     var date = (dateVal instanceof Date)
       ? Utilities.formatDate(dateVal, Session.getScriptTimeZone(), 'yyyy-MM-dd')
       : Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-    var unitCost = (row[3] === '' || row[3] === null || isNaN(row[3])) ? p.cost_price : Number(row[3]);
+    var unitCost = (row[3] === '' || row[3] === null || isNaN(row[3])) ? p.price : Number(row[3]);
     payload.push({
       delivery_date:    date,
-      product_name_raw: p.product_name_raw,
-      subcategory:      p.subcategory || null,
+      product_name_raw: p.key,
+      subcategory:      p.location || null,
       qty_cases:        Number(packs),
       pack_size:        p.pack_size || null,
       unit_cost:        unitCost != null ? Number(unitCost) : null,
