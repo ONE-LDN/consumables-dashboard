@@ -198,15 +198,23 @@ FIELD_UPDATE = [
     ),
     # The count unit changes with this answer: wet kit bags are on rolls, one in
     # each of the male and female toilets, and the minimum is half of the two —
-    # one roll. The 250 in Pack size counts BAGS, so the bridge from the count
-    # unit to the order unit is now unknown. See WORKBOOK.md.
+    # one roll.
+    #
+    # The 04/08 count of 3 was 3 ROLLS (Saffron, 2026-08-12), not 3 individual
+    # bags as the previous session recorded. So the baseline reads correctly
+    # under the new unit and needs no recount — and 3 rolls against a 1-roll
+    # minimum means this line is NOT short. It leaves the reset order.
+    #
+    # The 250 in Pack size still counts BAGS, so the bridge from the count unit
+    # to the order unit is unknown. That blocks sizing an order, not the
+    # minimum. See WORKBOOK.md.
     ("wet_kit_bags",
         {"par_qty_sheet": "1", "par_unit": "items", "count_unit": "rolls",
          "min_confirmed": "yes"},
         "minimum set to 1 roll 2026-08-12 (half of the two rolls, one per "
-        "toilet); count unit changed from bags to rolls, so bags per roll is "
-        "now needed to size an order from the 250-bag pack, and the 04/08 count "
-        "of 3 was in bags and no longer reads",
+        "toilet); count unit is rolls, and the 04/08 count of 3 was 3 rolls — "
+        "above minimum, not short; bags per roll still needed to size an order "
+        "from the 250-bag pack",
     ),
     # Procurement quote: 500 x £3.59 = £1,795.00 net, +£68.01 delivery,
     # sub-total £1,863.01 ex VAT, £2,235.61 inc. ✓
@@ -259,6 +267,47 @@ PRICE_OVERRIDE = {
 }
 PRICE_OVERRIDE_NOTE = "price corrected to net; v4's 25.19 was VAT-inclusive (invoice 2026-08-07)"
 
+# ── How precisely each product can be counted ───────────────────────────────
+# Some products are counted by eye rather than tallied: you judge that a 5L
+# bottle is about half full. `Count step` is the smallest fraction to record —
+# 1 means whole units only, 0.25 means round to the nearest quarter.
+#
+# THE RULE IS SET BY THE MINIMUM, NOT BY THE PRODUCT. A quarter of a toilet
+# roll is noise against a minimum of 24; a quarter of a 5L bottle is half the
+# difference between "fine" and "reorder" when the minimum is 2. So a product
+# needs a fine step only where its minimum is small enough for the fraction to
+# change the answer.
+#
+# Two things it cannot fix:
+#   - Opaque containers. You can see you have 3 aerosols; you cannot see how
+#     full they are. Those stay at 1 and a part-used can counts as a whole one
+#     until it is empty. Glade and the two deodorants are all in this class.
+#   - Precision is not accuracy. Recording 0.25 does not make the eye better
+#     than about a quarter, and usage is a DIFFERENCE of two counts, so it
+#     carries roughly twice the single-count error. See WORKBOOK.md.
+COUNT_STEP_DEFAULT = "1"
+COUNT_STEP = {
+    # Translucent or openable containers, all with minimums of 1–6, where the
+    # fraction genuinely changes whether the line is short.
+    "multipurpose_cleaner": "0.25",
+    "hand_wash": "0.25",
+    "conditioner": "0.25",
+    "moisturiser": "0.25",
+    "shampoo": "0.25",
+    "sanitiser_gel": "0.25",
+    "washing_up_liquid": "0.25",
+    "puly_caffe_cleaner": "0.25",
+    "chill_tubs_sanitiser": "0.25",
+    # Rolls you can see the remaining thickness of. Blue Cloth's minimum IS a
+    # quarter roll, so a whole-unit step could not express it at all.
+    "blue_cloth": "0.25",
+    "wet_kit_bags": "0.25",
+    # Wears down visibly.
+    "chalk_block": "0.25",
+    # Half a ream is judgeable by thickness; a quarter is not.
+    "paper_printer": "0.5",
+}
+
 # ── Products tab ────────────────────────────────────────────────────────────
 # Header names are matched case-insensitively by Code.gs, so they must stay
 # stable. No punctuation in them: '£' and brackets make the match brittle.
@@ -268,28 +317,40 @@ PRODUCTS_HEADERS = [
     "Category",           # C  what kind of thing it is
     "Location",           # D  where you count it
     "Count unit",         # E  what a count of 1 means
-    "Supplier",           # F
-    "Product description",# G  the long supplier description, for ordering
-    "Pack size",          # H  items per order unit
-    "Price per pack",     # I  NET of VAT, per pack
-    "Par qty",            # J  as written on the sheet
-    "Par unit",           # K  packs | items
-    "Min override",       # L  a stated requirement, in items
-    "Minimum",            # M  FORMULA — items
-    "Min confirmed",      # N  yes | no
-    "Order class",        # O  reorder | measure_only
-    "Notes",              # P
+    "Count step",         # F  smallest fraction to record: 1 | 0.5 | 0.25
+    "Supplier",           # G
+    "Product description",# H  the long supplier description, for ordering
+    "Pack size",          # I  items per order unit
+    "Price per pack",     # J  NET of VAT, per pack
+    "Par qty",            # K  as written on the sheet
+    "Par unit",           # L  packs | items
+    "Min override",       # M  a stated requirement, in items
+    "Minimum",            # N  FORMULA — items
+    "Min confirmed",      # O  yes | no
+    "Order class",        # P  reorder | measure_only
+    "Notes",              # Q
 ]
 
-# M = override if set, else Par x Pack Size when the par is in packs, else Par.
+# N = override if set, else Par x Pack Size when the par is in packs, else Par.
 # Blank par -> blank minimum, never 0: "no minimum set" and "minimum of zero"
 # are different claims and the dashboard treats them differently.
-MIN_FORMULA = '=IF(L{r}<>"",L{r},IF(J{r}="","",IF(K{r}="packs",IF(H{r}="","",J{r}*H{r}),J{r})))'
+MIN_FORMULA = '=IF(M{r}<>"",M{r},IF(K{r}="","",IF(L{r}="packs",IF(I{r}="","",K{r}*I{r}),K{r})))'
 
-COUNT_HEADERS = ["Product name", "Category", "Location", "Count", "Unit"]
+COUNT_HEADERS = ["Product name", "Category", "Location", "Count", "Unit", "Record to"]
 
-# Products!B:E — 1=Product name, 2=Category, 3=Location, 4=Count unit.
-COUNT_LOOKUP = '=IFERROR(VLOOKUP($A{r},Products!$B:$E,{col},FALSE),"")'
+# Products!B:F — 1=Product name, 2=Category, 3=Location, 4=Count unit,
+# 5=Count step.
+COUNT_LOOKUP = '=IFERROR(VLOOKUP($A{r},Products!$B:$F,{col},FALSE),"")'
+
+# "Record to" reads as an instruction rather than a number: 'whole cans',
+# 'nearest 1/4 bottle'. Built from the step and the unit, both looked up, so it
+# follows a catalogue edit like everything else on the count sheet.
+COUNT_STEP_LABEL = (
+    '=IFERROR(IF(VLOOKUP($A{r},Products!$B:$F,5,FALSE)=1,'
+    '"whole "&VLOOKUP($A{r},Products!$B:$F,4,FALSE),'
+    '"nearest "&TEXT(VLOOKUP($A{r},Products!$B:$F,5,FALSE),"0.##")&" '
+    '"&VLOOKUP($A{r},Products!$B:$F,4,FALSE)),"")'
+)
 
 ORDER_HEADERS = [
     "Date", "Product", "Packs ordered", "Unit cost £ (optional)",
@@ -405,6 +466,7 @@ def build_products(products):
             p["_category"],
             p["_location"],
             p["_unit"],
+            COUNT_STEP.get(key, COUNT_STEP_DEFAULT),
             p["supplier"],
             p["order_link_or_desc"],
             p["units_per_pack"],
@@ -434,6 +496,7 @@ def build_count(products):
             COUNT_LOOKUP.format(r=r, col=3),
             "",
             COUNT_LOOKUP.format(r=r, col=4),
+            COUNT_STEP_LABEL.format(r=r),
         ])
     return out
 

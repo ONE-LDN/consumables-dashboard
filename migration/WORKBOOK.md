@@ -55,7 +55,7 @@ they need the script properties in `apps-script/SETUP.md` first.
 
 ## `Products` — the catalogue
 
-Hand-maintained. One row per product, 30 rows, 16 columns.
+Hand-maintained. One row per product, 30 rows, 17 columns.
 
 | col | | |
 |---|---|---|
@@ -64,22 +64,23 @@ Hand-maintained. One row per product, 30 rows, 16 columns.
 | C | Category | product type |
 | D | Location | where you count it |
 | E | Count unit | what a count of 1 means |
-| F | Supplier | |
-| G | Product description | the long supplier description — for ordering, not display |
-| H | Pack size | items per order unit |
-| I | Price per pack | **net of VAT** |
-| J | Par qty | as written |
-| K | Par unit | `packs` or `items` |
-| L | Min override | a stated requirement, in items |
-| M | **Minimum** | **formula** — items |
-| N | Min confirmed | `yes` / `no` |
-| O | Order class | `reorder` / `measure_only` |
-| P | Notes | |
+| F | Count step | smallest fraction to record — `1`, `0.5` or `0.25` |
+| G | Supplier | |
+| H | Product description | the long supplier description — for ordering, not display |
+| I | Pack size | items per order unit |
+| J | Price per pack | **net of VAT** |
+| K | Par qty | as written |
+| L | Par unit | `packs` or `items` |
+| M | Min override | a stated requirement, in items |
+| N | **Minimum** | **formula** — items |
+| O | Min confirmed | `yes` / `no` |
+| P | Order class | `reorder` / `measure_only` |
+| Q | Notes | |
 
 ### Minimum is a formula
 
 ```
-=IF(L<>"", L, IF(J="","", IF(K="packs", IF(H="","", J*H), J)))
+=IF(M<>"", M, IF(K="","", IF(L="packs", IF(I="","", K*I), K)))
 ```
 
 Override if one is set, else Par × Pack size when the par is in packs, else the
@@ -136,12 +137,13 @@ on the delivery record.
 | C | Location | VLOOKUP |
 | D | **Count** | the only column anyone types in |
 | E | Unit | VLOOKUP |
+| F | Record to | VLOOKUP — "whole cans", "nearest 0.25 bottles" |
 
 `B1` take date (must be a real date), `B2` counted by, header row 3, products
 from row 4 in walk order.
 
-Category, Location and Unit look themselves up from `Products` **per row, keyed
-on the name beside them**. Edit the catalogue and the count sheet follows.
+Category, Location, Unit and Record to look themselves up from `Products`
+**per row, keyed on the name beside them**. Edit the catalogue and the count sheet follows.
 
 Keyed per row deliberately: a whole-range formula would re-sort the product
 names without moving the counts beside them, filing every count against the
@@ -165,6 +167,49 @@ Two of the shop sheet's rules are wrong here and would corrupt the baseline:
 - **Decimals are correct and expected.** Half a 5L bottle is `0.5`.
   `actual_count` is `numeric`.
 - **Count in items, never packs.** 24 rolls, not 4 packs. Column E says which.
+
+### Products counted by eye
+
+Some products are judged, not tallied — you look at a 5L bottle and decide it is
+about half full. `Count step` says how finely to judge each one, and column F of
+the count sheet turns it into an instruction: **"whole cans"** or
+**"nearest 0.25 bottles"**.
+
+**The step is set by the minimum, not by the product.** A quarter of a toilet
+roll is noise against a minimum of 24. A quarter of a 5L bottle is half the gap
+between "fine" and "reorder" when the minimum is 2. So a product needs a fine
+step only where the fraction can change the answer.
+
+| step | rows | |
+|---|---|---|
+| `0.25` | 12 | 5L bottles, tubs, part-used rolls, chalk blocks |
+| `0.5` | 1 | Printer Paper — half a ream is judgeable by thickness, a quarter is not |
+| `1` | 17 | anything you can tally |
+
+Two things this does **not** fix, and both matter more than the column does:
+
+**Opaque containers cannot be judged at all.** You can see you have 3 aerosols;
+you cannot see how full they are. Air Freshener and both Deodorants stay at
+whole units, and a part-used can counts as a whole one until it is empty. Their
+true stock is always somewhat less than the count says — a bias, not noise, and
+it never averages out.
+
+**Precision is not accuracy.** Writing `0.25` does not make the eye better than
+about a quarter. And usage is a *difference* of two counts, so it carries
+roughly **twice** the single-count error: two quarter-accurate counts give a
+usage figure good to about ±0.5 of a bottle. Where the real weekly movement is
+one bottle, that is a 50% error on the number the whole ordering model rests on.
+
+The consequence is a reading rule, not a data-entry rule:
+
+> **For eyeballed products, do not read usage from one week.** Read it over a
+> window long enough that the total movement is several times the count step —
+> a month or a quarter for the 5L refills. Weekly counts still catch a stockout;
+> they just cannot measure a slow burn.
+
+This is the same effect PLAN-V4 flagged as "a weekly count only resolves about
+one unit", sharpened: for eyeballed products it resolves about *two steps*, and
+for opaque ones it cannot resolve part-used stock at all.
 
 Unchanged, and still the rules that matter most:
 
@@ -211,6 +256,7 @@ checked.
 
 ```sql
 alter table shop_product_lookup add column count_unit    text;
+alter table shop_product_lookup add column count_step    numeric;
 alter table shop_product_lookup add column min_confirmed boolean;
 alter table shop_product_lookup add column order_class   text;
 
@@ -317,15 +363,16 @@ minimum; it still blocks sizing the order.
 
 **Wet Kit Bags — the count unit changes from bags to rolls.** They are on rolls,
 one in each of the male and female toilets, and the minimum is half of the two.
-Two consequences:
 
-- **The 04/08 count of 3 no longer reads.** It was confirmed at the time as
-  *3 individual bags*. As rolls it would read as comfortably above a 1-roll
-  minimum, which is the opposite of the truth — the note said "almost out".
-  It must not be loaded as count 1 for this product, and this line needs a
-  recount.
-- **Bags per roll is unknown**, so no order can be sized: the count is in rolls
-  and the pack of 250 is in bags, with no bridge between them.
+**The 04/08 count of 3 was 3 rolls** (Saffron, 2026-08-12), not 3 individual
+bags as the earlier session recorded. So the baseline reads correctly under the
+new unit, needs no recount — and **3 rolls against a 1-roll minimum means this
+line is not short. It leaves the reset order**, where PLAN-V4 §2a had it listed
+as below minimum with the quantity "TBC".
+
+Bags per roll is still unknown, so no order could be sized anyway: the count is
+in rolls and the pack of 250 is in bags, with no bridge between them. That now
+blocks nothing, since nothing needs ordering.
 
 ### Effect on the next `syncProducts` run
 
@@ -348,13 +395,9 @@ not a check for a mistake.
 
 ## Known gaps
 
-- **Wet Kit Bags needs a recount.** Its count unit changed from bags to rolls,
-  so the 04/08 figure of 3 — confirmed at the time as *3 individual bags* — no
-  longer reads. It must not be loaded as count 1 for this product, and it must
-  not be read as "3 rolls, comfortably above the 1-roll minimum", which is how
-  it now looks.
 - **Bags per roll is unknown for Wet Kit Bags**, so no order can be sized: the
   count is in rolls and the pack of 250 is in bags, with no bridge between them.
+  Not blocking anything today — the line is above its minimum.
 - **Water Softener Salt at £149.99 with no pack size.** Par Unit is `items`, so
   the minimum is safe, but the price basis still swings a costed order by an
   order of magnitude. Do not let it into an order until settled.

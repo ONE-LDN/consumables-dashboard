@@ -39,6 +39,7 @@ var COL = {
   type:     'Category',           // what kind of thing it is
   location: 'Location',           // where you count it
   unit:     'Count unit',         // what a count of 1 means
+  step:     'Count step',         // smallest fraction to record: 1 | 0.5 | 0.25
   supplier: 'Supplier',
   link:     'Product description',
   units:    'Pack size',          // items per order unit
@@ -49,7 +50,8 @@ var COL = {
 };
 
 // Stock Count / Order Log layout
-// Stock Count columns are Product name | Category | Location | Count | Unit.
+// Stock Count columns are
+//   Product name | Category | Location | Count | Unit | Record to
 // Count is column 4 and there is no Notes column; see buildCountSheet().
 var COUNT_DATE_CELL = 'B1';   // take date
 var COUNT_HEADER_ROW = 3;
@@ -129,8 +131,9 @@ function syncProducts() {
   }
   var iKey = idx(COL.key), iName = idx(COL.name), iType = idx(COL.type),
       iLoc = idx(COL.location), iUnit = idx(COL.unit), iSup = idx(COL.supplier),
-      iLink = idx(COL.link), iPrice = idx(COL.price), iUnits = idx(COL.units),
-      iMin = idx(COL.min), iMinOk = idx(COL.minok), iKlass = idx(COL.klass);
+      iStep = idx(COL.step), iLink = idx(COL.link), iPrice = idx(COL.price),
+      iUnits = idx(COL.units), iMin = idx(COL.min), iMinOk = idx(COL.minok),
+      iKlass = idx(COL.klass);
 
   var rows = [], seen = {}, dupes = [];
   for (var r = 1; r < values.length; r++) {
@@ -147,6 +150,10 @@ function syncProducts() {
       product_type:      String(row[iType] || '').trim() || null,
       subcategory:       String(row[iLoc] || '').trim() || null,
       count_unit:        String(row[iUnit] || '').trim() || null,
+      // How finely this product can be judged by eye. Usage is a DIFFERENCE of
+      // two counts, so it carries roughly twice this as error — the dashboard
+      // needs it to know which usage figures are noise.
+      count_step:        _num(row[iStep]),
       supplier:          String(row[iSup] || '').trim() || null,
       order_url:         String(row[iLink] || '').trim() || null,
       cost_price:        _num(row[iPrice]),
@@ -226,7 +233,7 @@ function buildCountSheet() {
   sh.getRange(COUNT_DATE_CELL).setNumberFormat('yyyy-mm-dd');
   sh.getRange('A2').setValue('Counted by:');
 
-  var headers = ['Product name', 'Category', 'Location', 'Count', 'Unit'];
+  var headers = ['Product name', 'Category', 'Location', 'Count', 'Unit', 'Record to'];
   sh.getRange(COUNT_HEADER_ROW, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
 
   // Category, Location and Unit look themselves up from Products, per row, so
@@ -235,16 +242,22 @@ function buildCountSheet() {
   // without moving the counts beside them.
   var out = products.map(function (p, i) {
     var r = COUNT_FIRST_ROW + i;
+    var range = PRODUCTS_SHEET + '!$B:$F';
     function look(col) {
-      return '=IFERROR(VLOOKUP($A' + r + ',' + PRODUCTS_SHEET + '!$B:$E,' + col + ',FALSE),"")';
+      return '=IFERROR(VLOOKUP($A' + r + ',' + range + ',' + col + ',FALSE),"")';
     }
-    return [p.name, look(2), look(3), '', look(4)];
+    // 'whole cans' / 'nearest 0.25 bottles' — an instruction, not a number.
+    var step = '=IFERROR(IF(VLOOKUP($A' + r + ',' + range + ',5,FALSE)=1,' +
+               '"whole "&VLOOKUP($A' + r + ',' + range + ',4,FALSE),' +
+               '"nearest "&TEXT(VLOOKUP($A' + r + ',' + range + ',5,FALSE),"0.##")' +
+               '&" "&VLOOKUP($A' + r + ',' + range + ',4,FALSE)),"")';
+    return [p.name, look(2), look(3), '', look(4), step];
   });
   if (out.length) sh.getRange(COUNT_FIRST_ROW, 1, out.length, headers.length).setValues(out);
 
   // Count is the only column anyone types in; the rest is reference.
   sh.getRange(COUNT_HEADER_ROW, 1, out.length + 1, 3).setBackground('#f3f3f3');
-  sh.getRange(COUNT_HEADER_ROW, 5, out.length + 1, 1).setBackground('#f3f3f3');
+  sh.getRange(COUNT_HEADER_ROW, 5, out.length + 1, 2).setBackground('#f3f3f3');
   sh.setFrozenRows(COUNT_HEADER_ROW);
   sh.autoResizeColumns(1, headers.length);
   SpreadsheetApp.getUi().alert('Stock Count sheet rebuilt with ' + out.length + ' products.');
@@ -265,8 +278,9 @@ function _readProducts() {
     return i;
   }
   var iKey = idx(COL.key), iName = idx(COL.name), iType = idx(COL.type),
-      iLoc = idx(COL.location), iUnit = idx(COL.unit), iSup = idx(COL.supplier),
-      iPrice = idx(COL.price), iUnits = idx(COL.units), iKlass = idx(COL.klass);
+      iLoc = idx(COL.location), iUnit = idx(COL.unit), iStep = idx(COL.step),
+      iSup = idx(COL.supplier), iPrice = idx(COL.price), iUnits = idx(COL.units),
+      iKlass = idx(COL.klass);
 
   var out = [];
   for (var r = 1; r < values.length; r++) {
@@ -279,6 +293,7 @@ function _readProducts() {
       type:       String(row[iType] || '').trim(),
       location:   String(row[iLoc] || '').trim(),
       unit:       String(row[iUnit] || '').trim(),
+      step:       _num(row[iStep]),
       supplier:   String(row[iSup] || '').trim(),
       price:      _num(row[iPrice]),
       pack_size:  _int(row[iUnits]),
