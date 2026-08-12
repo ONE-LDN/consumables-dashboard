@@ -403,11 +403,25 @@ def load_products():
             if field not in p:
                 raise SystemExit("{}: no such field {!r}".format(key, field))
             p[field] = value
-        # Drop the stale "unknown" flags this update has just answered.
-        stale = [n for n in p["_review"].split("; ")
-                 if not (("pack size" in n and "units_per_pack" in updates)
-                         or (n.strip() == "no price" and "price_per_pack_gbp" in updates))]
-        p["_review"] = "; ".join(filter(None, stale + [why]))
+        # Drop the flags this update has just answered. Left in, they sit in the
+        # Notes cell contradicting the resolution directly beside them — "CONFIRM
+        # Par Unit: 2 cases = 12 rolls" next to "minimum set to a quarter of one
+        # roll" is worse than no note at all.
+        def answered(n):
+            n = n.strip()
+            if "pack size" in n and "units_per_pack" in updates:
+                return True
+            if n == "no price" and "price_per_pack_gbp" in updates:
+                return True
+            if n.startswith("CONFIRM Par Unit") and (
+                    "par_unit" in updates or "min_confirmed" in updates):
+                return True
+            if n.startswith("measure-only") and updates.get("order_class") == "reorder":
+                return True
+            return False
+
+        kept = [n for n in p["_review"].split("; ") if not answered(n)]
+        p["_review"] = "; ".join(filter(None, kept + [why]))
 
     cats = category_lookup()
     missing = [p["product_name_raw"] for p in products if p["product_name_raw"] not in cats]

@@ -1,7 +1,7 @@
 # The consumables workbook
 
-**Google Sheet:** [ONE LDN Consumables Catalogue and Stock Take](https://docs.google.com/spreadsheets/d/13hUhCIw-D46Fn1UDURBaVDHWtypxcS03MTsoWFrhvhI/edit)
-(`13hUhCIw-D46Fn1UDURBaVDHWtypxcS03MTsoWFrhvhI`)
+**Google Sheet:** [ONE LDN Consumables Catalogue and Stock Take v2](https://docs.google.com/spreadsheets/d/1ieGFxfZxttaYWwjq1XobvYwfqjUce1jMxhm_UNilK3k/edit)
+(`1ieGFxfZxttaYWwjq1XobvYwfqjUce1jMxhm_UNilK3k`)
 
 One workbook holds the catalogue, the weekly count and the delivery log. The
 Apps Script pushes it to Supabase; the dashboard reads Supabase. **Nothing is
@@ -15,14 +15,13 @@ Products tab ──► Stock Count tab      (VLOOKUP, live)
      └─ syncProducts ──► Supabase ──► dashboard
 ```
 
-> ⚠ **Delete the four superseded sheets:** `1linoZ_oo…`, `1xGKdynO2…`,
-> `1CvPuwat…` and `1R_uIZfM…`. Each is an earlier draft with different columns,
-> a different product set, or stale rows. Several near-identical sheets is how a
-> count ends up in the wrong place.
+> ⚠ **Delete the five superseded sheets:** `1linoZ_oo…`, `1xGKdynO2…`,
+> `1CvPuwat…`, `1R_uIZfM…` and `13hUhCIw…`. Each is an earlier draft with
+> different columns, a different product set, or stale rows. Several
+> near-identical sheets is how a count ends up in the wrong place.
 >
-> If you have already started working in `1R_uIZfM…`, keep it and paste
-> `products_tab.csv` over cell A1 instead — it is the same 30 rows, so nothing
-> is left behind.
+> The "v2" in the title is only there to tell it apart from its predecessors —
+> drop it once the others are gone.
 
 Generated from `products_v4.csv` by `scripts/build_workbook.py`. Regenerate and
 re-paste when the product list changes; do not hand-edit the CSVs.
