@@ -58,9 +58,7 @@ LOCATION_OVERRIDE = {
 # there is no such column upstream. Grouped so that every category has more
 # than one member; a category of one is a label, not a grouping.
 CATEGORY = {
-    "Washroom": [
-        "toilet_rolls", "tampons", "pads", "urinal_shields", "glade_sprays",
-    ],
+    "Washroom": ["toilet_rolls", "tampons", "pads", "glade_sprays"],
     "Toiletries": [
         "hand_wash", "conditioner", "moisturiser", "shampoo", "sanitiser_gel",
         "sure_deodorant_men", "sure_deodorant_women",
@@ -70,10 +68,7 @@ CATEGORY = {
         "bin_bags", "microfibre_cloths", "multipurpose_cleaner",
         "blue_gloves_large",
     ],
-    "Stationery": [
-        "pens", "notepads", "paper_printer", "printer_ink_blk",
-        "printer_ink_blue", "printer_ink_pink", "printer_ink_yellow",
-    ],
+    "Stationery": ["pens", "paper_printer", "printer_ink"],
     "Facilities": [
         "chill_tub_filters", "chill_tubs_sanitiser", "water_softener_salt",
     ],
@@ -82,6 +77,93 @@ CATEGORY = {
     "Gym": ["chalk_block", "d_batteries"],
     # Things handed to members rather than consumed by the building.
     "Member Supplies": ["hair_bands", "key_fobs", "wet_kit_bags"],
+}
+
+# ── Changes on top of the v4 transcription ──────────────────────────────────
+# products_v4.csv stays a faithful record of what the v4 sheet said. Decisions
+# taken since live here, each with a date and a reason, so the diff between the
+# sheet and the catalogue is always readable.
+
+# Dropped from the catalogue. Both are live in Supabase, so both deactivate on
+# the next syncProducts run — intended, not an accident.
+DROP = {
+    "urinal_shields": "removed from the catalogue 2026-08-12",
+    "notepads": "removed from the catalogue 2026-08-12",
+}
+
+# The four single-colour ink rows become one. Each had a par of 1 cartridge, so
+# a consolidated minimum of 4 items is the same requirement, not a new one.
+#
+# What it costs: one row cannot tell you that yellow specifically has run out.
+# Tolerable only because ink is measure_only — counted to spot it going missing,
+# never auto-ordered — so the count is a check, not an order trigger.
+INK_MERGE_FROM = [
+    "printer_ink_blk", "printer_ink_pink", "printer_ink_blue", "printer_ink_yellow",
+]
+#
+# The invoice Saffron supplied settles the product outright: SODFACE TN248,
+# compatible with Brother TN248XL, sold as a 4-pack — so the four colours were
+# always one purchase, and one row is what the ordering actually looks like.
+#   1 x £38.32 net, +20% VAT = £45.99 gross.  38.32 x 1.20 = 45.98 ✓
+#
+# It also closes a standing question: the old printer_ink_blk row carried
+# £224.90, which the session log flagged as "looks like a multipack booked
+# against a single cartridge". It is not that either — the pack costs £38.32.
+# £224.90 is simply wrong and is not carried forward.
+INK_MERGED = {
+    "product_name_raw": "printer_ink",
+    "display_name": "Printer Ink",
+    "location": "FOH Desk",
+    "supplier": "Amazon",
+    "order_link_or_desc": "SODFACE TN248 Toner Cartridge, compatible with Brother "
+                          "TN248XL, 4-pack — https://www.amazon.co.uk/dp/B0D2HN4V4Y",
+    "price_per_pack_gbp": "38.32",   # net; £45.99 gross
+    "units_per_pack": "4",           # cartridges per pack, from the invoice
+    "count_unit": "cartridges",
+    # One spare pack = 4 cartridges, which is what the four separate rows asked
+    # for between them (1 each). Same requirement, stated once.
+    "par_qty_sheet": "1",
+    "par_unit": "packs",
+    "min_stock_units": "4",
+    "min_confirmed": "yes",
+    # Left as measure_only, as the four rows were. Worth revisiting now that a
+    # price and pack size exist: toner is genuinely consumed by printing, unlike
+    # the key fobs it was grouped with, so reorder may be the better class.
+    "order_class": "measure_only",
+    "_review": "merged from the 4 single-colour rows 2026-08-12: the 4-pack was "
+               "always one purchase; price and pack size from the supplied "
+               "invoice; still measure_only — reconsider, toner is consumed",
+}
+
+# Field-level updates from documents Saffron supplied 2026-08-12. Each carries
+# the evidence in its note, because every price and pack size in this catalogue
+# has to be attributable — guessing them is what produced "order 161 packs of
+# plasters" and "order 2 fobs" in earlier passes.
+FIELD_UPDATE = {
+    # Amazon is unreachable from here, so pack size and price could not be read
+    # off the listing and stay blank rather than guessed.
+    "pens": (
+        {"order_link_or_desc": "https://www.amazon.co.uk/dp/B07TVR5X6W"},
+        "product link supplied 2026-08-12; pack size and price still needed from "
+        "the listing",
+    ),
+    # Procurement quote: 500 x £3.59 = £1,795.00 net, +£68.01 delivery,
+    # sub-total £1,863.01 ex VAT, £2,235.61 inc. ✓
+    #
+    # This retires correction #5 from the first session, which struck out a pack
+    # size of 1 for fobs as invented. It is no longer invented: the quote prices
+    # per fob, and 500 was the order quantity, not the pack.
+    "key_fobs": (
+        {
+            "order_link_or_desc": "GAT Key Tag 180 F7 1k black — MIFARE 7Byte UID, "
+                                  "coded to Gantner Standard, part G-756026",
+            "units_per_pack": "1",
+            "price_per_pack_gbp": "3.59",
+        },
+        "unit price from the 500-fob procurement quote (500 x £3.59 = £1,795.00 "
+        "net); delivery charged separately at £68.01; the quote does not name the "
+        "vendor and a minimum order quantity may apply",
+    ),
 }
 
 # An explicitly-stated human requirement beats the computed candidate — the
@@ -164,6 +246,30 @@ def unit(display_name, count_unit):
 def load_products():
     with open(MIGRATION / "products_v4.csv", newline="") as fh:
         products = list(csv.DictReader(fh))
+    fields = list(products[0].keys())
+
+    for key in list(DROP) + INK_MERGE_FROM:
+        if not any(p["product_name_raw"] == key for p in products):
+            raise SystemExit("nothing to remove: {} is not in products_v4".format(key))
+    removed = set(DROP) | set(INK_MERGE_FROM)
+    products = [p for p in products if p["product_name_raw"] not in removed]
+
+    merged = {f: INK_MERGED.get(f, "") for f in fields}
+    products.append(merged)
+
+    for key, (updates, why) in FIELD_UPDATE.items():
+        p = next((x for x in products if x["product_name_raw"] == key), None)
+        if p is None:
+            raise SystemExit("no such product for field update: " + key)
+        for field, value in updates.items():
+            if field not in p:
+                raise SystemExit("{}: no such field {!r}".format(key, field))
+            p[field] = value
+        # Drop the stale "unknown" flags this update has just answered.
+        stale = [n for n in p["_review"].split("; ")
+                 if not (("pack size" in n and "units_per_pack" in updates)
+                         or (n.strip() == "no price" and "price_per_pack_gbp" in updates))]
+        p["_review"] = "; ".join(filter(None, stale + [why]))
 
     cats = category_lookup()
     missing = [p["product_name_raw"] for p in products if p["product_name_raw"] not in cats]

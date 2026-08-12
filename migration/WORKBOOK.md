@@ -1,7 +1,7 @@
 # The consumables workbook
 
-**Google Sheet:** [ONE LDN — Consumables Catalogue & Stock Take](https://docs.google.com/spreadsheets/d/1CvPuwat4uQ1sUm694a19pLZUS0V8IsRJEaQwUZ3BHxs/edit)
-(`1CvPuwat4uQ1sUm694a19pLZUS0V8IsRJEaQwUZ3BHxs`)
+**Google Sheet:** [ONE LDN Consumables Catalogue and Stock Take](https://docs.google.com/spreadsheets/d/13hUhCIw-D46Fn1UDURBaVDHWtypxcS03MTsoWFrhvhI/edit)
+(`13hUhCIw-D46Fn1UDURBaVDHWtypxcS03MTsoWFrhvhI`)
 
 One workbook holds the catalogue, the weekly count and the delivery log. The
 Apps Script pushes it to Supabase; the dashboard reads Supabase. **Nothing is
@@ -15,16 +15,21 @@ Products tab ──► Stock Count tab      (VLOOKUP, live)
      └─ syncProducts ──► Supabase ──► dashboard
 ```
 
-> ⚠ **Delete the two superseded sheets.** `1linoZ_oo…` and `1xGKdynO2…` were
-> earlier drafts of the count sheet alone. Two sheets with similar names and
-> different columns is how a count ends up in the wrong place.
+> ⚠ **Delete the four superseded sheets:** `1linoZ_oo…`, `1xGKdynO2…`,
+> `1CvPuwat…` and `1R_uIZfM…`. Each is an earlier draft with different columns,
+> a different product set, or stale rows. Several near-identical sheets is how a
+> count ends up in the wrong place.
+>
+> If you have already started working in `1R_uIZfM…`, keep it and paste
+> `products_tab.csv` over cell A1 instead — it is the same 30 rows, so nothing
+> is left behind.
 
 Generated from `products_v4.csv` by `scripts/build_workbook.py`. Regenerate and
 re-paste when the product list changes; do not hand-edit the CSVs.
 
 | CSV | tab |
 |---|---|
-| `products_tab.csv` | `Products` — 35-line catalogue |
+| `products_tab.csv` | `Products` — 30-line catalogue |
 | `stock_count_sheet.csv` | `Stock Count` — weekly count |
 | `order_log_tab.csv` | `Order Log` — deliveries, in packs |
 
@@ -35,8 +40,7 @@ cadence, data ready in `first_aid_v4.csv` (PLAN-V4 §8).
 
 ## Setting it up
 
-1. Rename the imported tab to **`Products`** (and fix the workbook title — the
-   `&` came through as `&amp;`).
+1. Rename the imported tab to **`Products`**.
 2. **Extensions ▸ Apps Script**, paste `apps-script/Code.gs`, save. Reload the
    sheet; a **Consumables** menu appears.
 3. Menu ▸ **② Rebuild Stock Count sheet** — creates the tab, formatted, with the
@@ -51,7 +55,7 @@ they need the script properties in `apps-script/SETUP.md` first.
 
 ## `Products` — the catalogue
 
-Hand-maintained. One row per product, 16 columns.
+Hand-maintained. One row per product, 30 rows, 16 columns.
 
 | col | | |
 |---|---|---|
@@ -82,11 +86,10 @@ Override if one is set, else Par × Pack size when the par is in packs, else the
 par as written. **Change a par or a pack size and the minimum follows** — which
 is the reason for one workbook rather than three.
 
-Two rows carry an override, both from the sheet's own notes, because an
+One row carries an override, from the sheet's own notes, because an
 explicitly-stated human requirement beats the computed candidate
-(`MINIMUM-STOCK.md`): **D Batteries** 10 (Par × Pack gives 8) and **Notepads**
-1 (no par at all). Every other row's formula reproduces the agreed v4 minimum
-exactly — verified for all 35.
+(`MINIMUM-STOCK.md`): **D Batteries** 10, where Par × Pack gives 8. Every other
+row's formula reproduces the agreed v4 minimum exactly.
 
 A blank par gives a **blank** minimum, never `0`. "No minimum set" and "a
 minimum of zero" are different claims, and the dashboard is meant to refuse to
@@ -97,11 +100,11 @@ compute rather than show a confident wrong number.
 The v4 sheet had one `Category` column that mixed them — `Toiletries` is a
 product type, `Gym Floor` is a place. This is the split PLAN-V4 called for.
 
-`Location` keeps the v4 values and drives the count walk: FOH Desk (10) → Cafe
-(3) → Gym Floor (2) → Toiletries (15) → Staff Room (4) → Plant room (1).
+`Location` keeps the v4 values and drives the count walk: FOH Desk (6) → Cafe
+(3) → Gym Floor (2) → Toiletries (14) → Staff Room (4) → Plant room (1).
 
-`Category` is derived from the products themselves: Cleaning (8), Stationery
-(7), Toiletries (7), Washroom (5), Facilities (3), Member Supplies (3), Gym (2).
+`Category` is derived from the products themselves: Cleaning (8), Toiletries
+(7), Washroom (4), Facilities (3), Member Supplies (3), Stationery (3), Gym (2).
 
 The split earns its keep where the two disagree: **D Batteries** are Category
 `Gym` (they run the ergs), Location `FOH Desk` (that is where the drawer is).
@@ -219,6 +222,78 @@ the intended behaviour, not a silent partial write.
 `min_stock_units` already exists and is `integer`; `monthly_par_packs` stops
 being written.
 
+## Changes taken 2026-08-12
+
+`products_v4.csv` stays a faithful record of what the v4 sheet said. These are
+decisions on top of it, held as explicit constants in `build_workbook.py`, so
+the diff between the sheet and the catalogue is always readable. **35 → 30
+products.**
+
+| | |
+|---|---|
+| **Urinal Shields** | removed |
+| **Notepads** | removed |
+| **Printer inks** | the four single-colour rows merged into one, `printer_ink` |
+| **Pens** | product link added; pack size and price still needed |
+| **Key Fobs** | pack size and price now evidenced |
+
+### The ink merge
+
+The supplied invoice settles it: **SODFACE TN248**, compatible with Brother
+TN248XL, sold as a **4-pack** at **£38.32 net** (£45.99 gross, ×1.20 ✓). The
+four colours were always one purchase, so one row is what the ordering actually
+looks like.
+
+Each of the four rows had a par of 1 cartridge, so the merged par of 1 pack —
+4 cartridges — is the same requirement stated once, not a new one.
+
+**It also closes a standing question.** The old `printer_ink_blk` row carried
+**£224.90**, which the session log flagged as *"looks like a multipack booked
+against a single cartridge"*. It is not that either: the pack costs £38.32.
+£224.90 is simply wrong, and is not carried forward.
+
+What the merge costs: one row cannot tell you that *yellow specifically* has run
+out. Tolerable only because ink is `measure_only` — counted to spot it going
+missing, never auto-ordered. Worth revisiting now that a real price and pack
+size exist: toner is genuinely consumed by printing, unlike the key fobs it was
+grouped with, so `reorder` may be the better class.
+
+### Key fobs
+
+The procurement quote reconciles exactly: **500 × £3.59 = £1,795.00** net,
+plus **£68.01** delivery = **£1,863.01** ex VAT, ×1.20 = **£2,235.61** inc.
+
+So `key_fobs` now carries **pack size 1** at **£3.59 net** — the quote prices
+per fob, and 500 was the order quantity, not the pack. That **retires correction
+#5 from the first session**, which struck out a pack size of 1 for fobs as
+invented. It is no longer invented; it is on an invoice.
+
+Still `measure_only`, and rightly so: fobs go missing rather than being consumed,
+and reordering 500 at £1,863 is a procurement decision, not a reorder trigger.
+
+Two caveats kept in Notes: the quote does not name the vendor (the part is
+Gantner standard, `G-756026`), and a minimum order quantity may apply — 500 is
+the only purchase on record.
+
+### Effect on the next `syncProducts` run
+
+39 live consumables today → **30**. Nine deactivate, three are created:
+
+| | |
+|---|---|
+| deactivate (already planned) | `plastic_food_bags`, `clinell_wipes`, `kleenex_tissues`, `dispenser_pumps` |
+| deactivate (new today) | `urinal_shields` |
+| deactivate (replaced by `printer_ink`) | `printer_ink_blk`, `printer_ink_pink`, `printer_ink_blue`, `printer_ink_yellow` |
+| move to First Aid | `blue_plasters`, `hs_refills`, `ice_packs` |
+| created | `paper_printer`, `pens`, `printer_ink` |
+
+`39 − 4 − 1 − 4 − 3 + 3 = 30`. **Notepads never reached Supabase** — it was one
+of PLAN-V4's three new rows and was dropped before the first sync, so there is
+nothing to deactivate; it simply never gets created.
+
+All nine deactivations are intended. Step 7's verification is a confirmation,
+not a check for a mistake.
+
 ## Known gaps
 
 - **4 rows are `min_confirmed = no`** — Blue Cloth, Ice Bath Sanitiser, Wet Kit
@@ -227,8 +302,12 @@ being written.
 - **Water Softener Salt at £149.99 with no pack size.** Par Unit is `items`, so
   the minimum is safe, but the price basis still swings a costed order by an
   order of magnitude. Do not let it into an order until settled.
-- **5 products have no pack size**, so no order can be sized: Key Fobs, Water
-  Softener Salt, Printer Paper, Pens, Notepads.
+- **3 products have no pack size**, so no order can be sized: Water Softener
+  Salt, Printer Paper, Pens. Key Fobs and Notepads left the list — the fobs now
+  have an evidenced pack size, notepads were removed.
+- **Pens still need a pack size and price.** The listing is linked but Amazon
+  is unreachable from this environment, so neither could be read off it and
+  neither is guessed.
 - **Tampons and Sanitary Pads have a blank par** where v3 said 64 and 44. Both
   were in confirmed surplus, so blank probably means "do not reorder" — worth
   stating rather than leaving an empty cell that reads as an oversight.
