@@ -3,7 +3,7 @@
 Stage the 2026-08-04 physical count as baseline count 1.
 
 Source: the `Stock` column of `consumables_catalogue_v3`
-(1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4), supplied by Saffron 2026-08-05
+(1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4), supplied by Saffron 2026-08-12
 with the basis stated:
 
     "Counted primarily per item and where bottles or tubs were in question,
@@ -14,7 +14,7 @@ That is a much better position than the previous session concluded ("the count
 column silently mixes packs and items; 9 products are undecidable"). Under
 Saffron's rule 30 of 34 counted lines read cleanly as items. The other four --
 tampons, pads, bin bags, wet kit bags -- needed her to state the basis directly;
-all four were confirmed 2026-08-05 and are recorded in RESOLVED_BASIS below.
+all four were confirmed 2026-08-12 and are recorded in RESOLVED_BASIS below.
 
 The count predates the v4 rebuild, so it is keyed against the OLD product names.
 COUNT_TO_V4_KEY maps them onto the v4 slugs. Three v3 rows are Sea Kelp products
@@ -118,7 +118,7 @@ COUNT_TO_V4_KEY = {
 }
 
 # The four lines Saffron's "items, fractions for containers" rule did not settle
-# on its own. All four CONFIRMED by her 2026-08-05.
+# on its own. All four CONFIRMED by her 2026-08-12.
 #   (key, multiplier, resulting_items, basis_label, how it was settled)
 # multiplier is what the written figure is multiplied by to reach items.
 RESOLVED_BASIS = {

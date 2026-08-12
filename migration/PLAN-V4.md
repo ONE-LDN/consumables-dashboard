@@ -82,7 +82,7 @@ wrong:
 So the honest position is that **`Par Qty`'s unit is mixed per row**, which is
 exactly the failure mode that made v3's `Stock` column unsalvageable.
 
-**Decided 2026-08-05: the sheet gains an explicit `Par Unit` column** stating
+**Decided 2026-08-12: the sheet gains an explicit `Par Unit` column** stating
 `packs` or `items` per row. Rejected: asserting one basis for all 35 rows in the
 header, which is what produced the 100-bag salt minimum — a uniform rule is only
 safe if the data is uniform, and it isn't.
@@ -169,7 +169,7 @@ dominate the whole shopping list.
 
 ## 2a. The baseline count — 2026-08-04
 
-Supplied by Saffron 2026-08-05. It was the `Stock` column of
+Supplied by Saffron 2026-08-12. It was the `Stock` column of
 `consumables_catalogue_v3` all along, which is why it could not be found: it was
 never labelled as a count. The basis, in her words:
 
@@ -225,7 +225,7 @@ so the *decision* to order is safe even though the *quantity* isn't yet fixed.
 Worth separating those two, because most held lines block both and this one only
 blocks the second.
 
-### The four lines the rule did not settle — all confirmed 2026-08-05
+### The four lines the rule did not settle — all confirmed 2026-08-12
 
 | product | as written | basis | items | |
 |---|---|---|---|---|
@@ -501,9 +501,15 @@ price, Newline VAT, pack sizes for 30 products, the first-aid split, the
     at v4 prices. Log every delivery in `Order Log` — usage is
     `opening + orders_between − closing`, so an unlogged delivery makes the
     arithmetic lie.
-11. **Count Tue 11/08 as count 2**, then every Tuesday. Count 2 is the first
+11. **Count Tue 18/08 as count 2**, then every Tuesday. Count 2 is the first
     measured usage this system has ever had. From there, measured usage replaces
     the estimated minimums, fast movers first. Expect to revise upward.
+
+    ⚠ **Tue 11/08 passed without a count.** So the gap from the 04/08 baseline to
+    count 2 is **14 days, not 7**. That is not fatal — usage is derived from the
+    interval, not from a fixed week — but it does mean the reset order must be
+    placed *and logged* before 18/08, or the interval spans an unrecorded
+    delivery and the first usage figure is worthless.
 
 ### What is readable, and when
 
@@ -516,7 +522,7 @@ During the reset, err generous.
 
 ---
 
-## 11. Decisions taken 2026-08-05
+## 11. Decisions taken 2026-08-12
 
 - **`Par Unit` becomes a column on the sheet**, per row, rather than the header
   asserting one basis for all 35. See §1.3.
@@ -533,8 +539,9 @@ During the reset, err generous.
   the previous session's conclusion that the column was unsalvageable.
 - **No fresh count is needed before the reset.** The previous plan called for one
   on Tue 11/08 because the 04/08 basis was thought to be undecidable. It isn't,
-  so 11/08 becomes count 2 — the first *usage* reading — rather than a redo of
-  count 1. That pulls the whole measurement schedule forward by a week.
+  so the next Tuesday count becomes count 2 — the first *usage* reading — rather
+  than a redo of count 1. 11/08 has since passed uncounted, so that is **Tue
+  18/08**, a 14-day interval from the baseline.
 
 ## 12. Still open
 

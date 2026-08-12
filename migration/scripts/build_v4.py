@@ -160,7 +160,7 @@ PACK_OVERRIDE = {
 }
 
 # Pack sizes the sheet leaves blank, carried over from the live Supabase row.
-# Provenance: shop_product_lookup.pack_size, read 2026-08-05. NOT independently
+# Provenance: shop_product_lookup.pack_size, read 2026-08-12. NOT independently
 # verified against a supplier listing — flagged in the output.
 PACK_FROM_DB = {
     "hair_bands":          100,
@@ -182,7 +182,7 @@ NOTE_MIN = {
 }
 
 # ---------------------------------------------------------------------------
-# 3a. Par Unit — DECIDED 2026-08-05: the sheet gains an explicit `Par Unit`
+# 3a. Par Unit — DECIDED 2026-08-12: the sheet gains an explicit `Par Unit`
 #     column rather than the header asserting one basis for all 35 rows.
 #     v4's Par Qty is in packs on most rows but items on a few, and guessing
 #     uniformly is what produced a 100-bag salt minimum.

@@ -3,7 +3,7 @@
 > **The method here still stands; its inputs are gone.** See
 > [`PLAN-V4.md`](PLAN-V4.md).
 >
-> Two corrections to this document, established 2026-08-05:
+> Two corrections to this document, established 2026-08-12:
 >
 > 1. **The 29/07 count is not real.** All 38 of its values are the number `6`.
 >    Every figure below that leans on it — the burn-rate table, the "40–60%
@@ -12,7 +12,7 @@
 > 2. Three of the four burn-checked products (Sea Kelp hand wash, conditioner,
 >    lotion) no longer exist; they are Odyssey products from a different supplier.
 > 3. **"The existing counts can't be salvaged" below is wrong.** Saffron
->    confirmed 2026-08-05 that the `Stock` column was counted **per item, with
+>    confirmed 2026-08-12 that the `Stock` column was counted **per item, with
 >    fractions where a bottle or tub was part used**. Under that rule 30 of the
 >    34 counted lines read cleanly, and only Tampons, Pads, Bin Bags and Wet Kit
 >    Bags remain undecided — not the 9 claimed here. The column was usable all

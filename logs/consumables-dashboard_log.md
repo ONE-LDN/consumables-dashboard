@@ -11,6 +11,304 @@ contractual documentation suite and nothing here goes to Notion.
 
 ---
 
+# v4 product list, the junk count, and a salvaged baseline
+**Date:** 2026-08-12
+**Project:** ONE LDN consumables dashboard — v4 catalogue, baseline count, first aid split
+**Mode:** Rolling Log + Git Push
+**Status:** Complete (planning) — PR #4 merged. **Nothing executed yet:** no code
+change, no Supabase write, junk count still live.
+
+---
+
+## Project Context
+
+See the 2026-08-05 entry for the architecture (Sheet → Apps Script → Supabase →
+`index.html`) and the minimum-stock method. What is new: the product list was
+rebuilt **again**, as `consumables_catalogue_v4`, and most of the previous
+session's artifacts are superseded by it.
+
+Sheet lineage, which is confusing and worth pinning down:
+
+| sheet | ID | what it is |
+|---|---|---|
+| `consumables_catalogue_v3` | `1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4` | the sheet the 2026-08-05 session called "v2". **Renamed**, not replaced. Its `Stock` column is the 04/08 baseline count |
+| `consumables_catalogue_v4` | `1iWeiiY2a_hc98gy7T-Itsst9VMHfuiRXfcwJ16OH-z8` | current. One tab, `Product List (Updated)`, A1:G36, 35 products |
+
+## Session Goal
+
+Plan the adjustment of the dashboard and stock-take sheet to the v4 product list:
+agree the product set, split first aid onto its own tab, remove brand names from
+the count sheet and dashboard, and wire in the 2026-08-04 stock count.
+
+## State Before This Session
+
+Per the 2026-08-05 entry: analysis complete on PR #3 (merged), nothing synced to
+Supabase, 40-ish active consumables, and what was believed to be one real stock
+take (2026-07-29, 38 rows) plus zero deliveries. **That belief was wrong** — see
+Corrections.
+
+## What Was Done
+
+**Read v4 and reconciled it against the live DB.** 35 consumables. Against 39
+live active rows: 32 stay, 4 deactivate, 3 move to First Aid, 3 are new.
+`39 − 4 − 3 + 3 = 35`, no key collisions.
+
+**Found the 29/07 count is junk** (Correction 1) and traced what it would have
+done to the dashboard.
+
+**Found the missing 04/08 count** — it was v3's `Stock` column, unlabelled as a
+count, which is why the previous session and this one both failed to locate it
+until Saffron pasted it. She then supplied the basis, which unlocked it
+(Correction 2).
+
+**Designed the unit model.** One unit — items — everywhere; pack size converts to
+packs only at the ordering step. Two guard rails, because "count in items" was
+already the 2026-08-05 decision and it still went wrong: the count-sheet header
+carries the noun per product (`Count (rolls)`), and `unit_basis_v4.csv` states
+for all 35 products what a count of 1 means.
+
+**Found a live bug in `index.html`** — see Notes & Gotchas. Not fixed.
+
+**Wrote committed generators.** `build_v4.py` and `build_baseline_count.py`,
+closing the largest handoff gap the 2026-08-05 entry recorded (its model lived in
+an ephemeral scratchpad and was lost with the container, exactly as predicted).
+
+**What did not work / was abandoned:**
+
+- **Reading `Par Qty` as packs everywhere.** Seven rows multiply out to v3's item
+  figure exactly, which looked conclusive, but the same rule gives Water Softener
+  Salt a 100-bag / ~£1,500 minimum. Abandoned in favour of a per-row `Par Unit`
+  column.
+- **Deriving anything from the 29/07 count.** It is 38 copies of the number 6.
+- **`send_later` for the PR check-in.** The `Claude_Code_Remote` MCP server
+  flapped repeatedly; fell back to an in-session `CronCreate` job, which then
+  vanished from the session store on its own. Neither survives the container.
+
+## Artifacts Produced / Modified
+
+| File | What it is | Status | Path |
+|------|------------|--------|------|
+| `PLAN-V4.md` | The plan: unit model, naming, tab structure, Supabase + dashboard changes, sequence, decisions, 6 still open | Created | `migration/` |
+| `build_v4.py` | Generator for the catalogue CSVs. Holds every hand-confirmed constant with a provenance tag (`SHEET_V4`, `SHORT_NAME`, `COUNT_UNIT`, `PACK_OVERRIDE`, `PACK_FROM_DB`, `PAR_UNIT_ITEMS`, `PAR_UNIT_UNCERTAIN`, `NOTE_MIN`, `MEASURE_ONLY`, `FIRST_AID`) | Created | `migration/scripts/` |
+| `build_baseline_count.py` | Stages the 04/08 count against v4 keys (`COUNT_V3`, `COUNT_TO_V4_KEY`, `RESOLVED_BASIS`, `ADJUSTED`, `SURPLUS_CONFIRMED`, `ROBUST_ORDER`) | Created | `migration/scripts/` |
+| `products_v4.csv` | 35 consumables, with `par_unit`, `par_unit_basis`, `min_confirmed`, `order_class` | Created | `migration/` |
+| `first_aid_v4.csv` | 33 first-aid lines. Independently reproduces `FIRST-AID.md`: 14 short, 247 items | Created | `migration/` |
+| `unit_basis_v4.csv` | Per product: count header, what 1 means, order unit, minimum | Created | `migration/` |
+| `baseline_count_2026_08_04.csv` | Baseline count 1, 35 rows keyed to v4 | Created | `migration/` |
+| `README.md` | Superseded banner; which of its 7 findings survive | Modified | `migration/` |
+| `MINIMUM-STOCK.md` | Three retractions prepended | Modified | `migration/` |
+| `consumables-dashboard_log.md` | This entry | Modified | `logs/` |
+
+**Not touched:** `index.html`, `apps-script/Code.gs`, `apps-script/SETUP.md`. **No
+Supabase writes.**
+
+## Decisions & Reasoning
+
+- **`Par Unit` becomes a per-row column on the sheet** (Saffron, overriding my
+  recommendation of a `Par Qty (packs)` header). Mine was wrong: a uniform rule is
+  only safe if the data is uniform, and it isn't. Her call produced 25 syncable
+  minimums vs 23, and resolved all three implausible figures.
+- **Keys stay as they are.** Brand/supplier changes move the *description*, not
+  the key, so the four re-branded toiletries keep their invoice history. Saffron:
+  *"The names don't matter in the long run for the stock baseline."*
+- **Three name fields, not one:** hidden slug / short brand-free `display_name`
+  (count sheet + dashboard) / full supplier description (catalogue + shopping list
+  only). Directly from Saffron's requirement that brand not appear on the count
+  sheet.
+- **First Aid gets its own Supabase `category`, not a subcategory.** Different
+  regime — quarterly vs weekly, BS 8599-1 compliance vs consumption, kit-level vs
+  item-level ordering. One category would put 33 never-reordered rows into the
+  Consumables prediction model. Rejected: `subcategory='First Aid'`.
+- **First aid is ordered via a BS 8599-1 refill pack** (Saffron), not item by
+  item. Rejected: pricing up all 12 short lines.
+- **The 4 absent products are dropped on purpose** (Saffron) — `plastic_food_bags`,
+  `clinell_wipes`, `kleenex_tissues`, `dispenser_pumps`.
+- **Add `monthly_usage_units`** rather than store items in `monthly_par_packs`. A
+  column named "packs" holding items is the same class of mistake as the untyped
+  `Stock` column and will be believed by whoever reads it next.
+- **Minimum = `Par Qty` in items, full stop.** With the burn-rate evidence
+  retracted there is no usage figure at all, so the four-candidate model collapses
+  to Saffron's judgement plus note-stated requirements. Measured usage takes over
+  from count 2.
+- **Refuse to compute rather than compute through a gap.** `min_confirmed` and
+  `basis_confirmed` exist so the dashboard can say "needs a pack size" instead of
+  showing a confident wrong number.
+- **Chill Tub Filters counted 10 → adjusted to 4** (my judgement, flagged in the
+  CSV). Note reads "4 new ones. 6 old."; counting spent filters against a minimum
+  of 1 suppresses a reorder indefinitely.
+- **Wet Kit Bags is orderable despite an unconfirmed minimum.** 3 bags is below
+  every candidate (20 old par, 500 new), so the *decision* is safe even though the
+  *quantity* isn't. Worth separating those two — most held lines block both.
+
+## Corrections Made This Session
+
+Five. The first two invalidate substantial parts of the 2026-08-05 entry.
+
+1. **The 2026-07-29 stock take is not data.** The prior entry calls it "1 stock
+   take (2026-07-29, 38 products)" and plans around preserving it and not
+   orphaning it. All 38 rows have `actual_count = 6` — one distinct value.
+   `SELECT take_date, count(DISTINCT actual_count) …` shows `distinct_vals = 1,
+   min = 6, max = 6`. It is deleted, not migrated. Consequence: with deliveries
+   also empty, there is **no consumables history at all**, which is what makes the
+   reset free.
+2. **"The existing counts can't be salvaged" was wrong.** The prior entry states
+   the `Stock` column "silently mixes packs and items and 9 products cannot be
+   told apart. Not salvageable — needs a fresh count." Saffron: *"Counted
+   primarily per item and where bottles or tubs were in question, fractions
+   etc."* Under that rule **30 of 34 lines read cleanly**, and the decimals land
+   exactly where they should (2.5 Greenspeed, 0.5 Puly, 0.5 ream). Only 4 needed
+   her to state the basis. The column was usable; the convention had never been
+   written down. **Consequence: no redo count is needed**, so the next Tuesday
+   count is count 2 — the first usage reading — not a repeat of count 1.
+3. **The 2026-08-05 burn-rate evidence has no measurement behind it.** The
+   "fast movers understated by 40–60%" finding, and all four burn-checked usage
+   figures, derive from the junk count. Retracted in `MINIMUM-STOCK.md` as
+   removed, not merely uncertain. Three of the four products no longer exist
+   anyway (Sea Kelp → Odyssey).
+4. **Reading `Par Qty` as packs everywhere.** My first pass produced Chalk Block
+   16 blocks (v3 said 2, shelf held 1), Water Softener Salt 100 bags ≈ £1,500, and
+   Printer Paper 2 packs against a note reading "2 on hand". The intuitive reading
+   — seven exact hits! — was the wrong one. Fixed by `PAR_UNIT_ITEMS`.
+5. **Dates in the v4 docs were stamped 2026-08-05.** Every "Decided/confirmed
+   2026-08-05" in `PLAN-V4.md`, both scripts and `MINIMUM-STOCK.md` referred to
+   *this* session's decisions and has been corrected to **2026-08-12** — they were
+   misattributing this session's calls to the previous one. Same root cause: the
+   plan said "count Tue 11/08", which had already passed uncounted. Now 18/08,
+   with the 14-day interval called out. (GitHub's API reported PR #4's `created_at`
+   as `2026-08-05T15:47Z`, which is what seeded the confusion; the container clock
+   and commit timestamps both say 2026-08-12. **Do not trust that API field here.**)
+
+## Skills / Tooling Used
+
+- **Google Drive MCP** — `read_file_content` on both sheets. Note it returns *all*
+  tabs concatenated, which is how v3's `Stock` column and invoice tab were
+  recovered without a download.
+- **Supabase MCP** (`ljjwssicvvyyueyznmou`) — read-only. Diagnosed the junk count,
+  confirmed 0 deliveries, `min_stock_units` NULL across all 39 rows, and that
+  `stock_tracked=false` already varies by category. **No writes.**
+- **GitHub MCP** — PR #4 create / body refresh / status. Flapped constantly;
+  expect to re-`ToolSearch` after most disconnect notices.
+- **`migration/scripts/*.py`** — both committed, both verified to regenerate their
+  CSVs byte-identically. Unlike last session, these survive the container.
+
+## Current State (end of session)
+
+- **PR #4 merged** into `master` (`f104249`). Working branch reset onto it and
+  re-pushed (the branch was deleted on merge, so the push recreated it).
+- **Nothing executed.** No `Code.gs` or `index.html` change, no Supabase write.
+  The 38 junk counts are **still in `shop_stock_takes`**.
+- The log-entry commit and the Correction-5 date fixes are the only uncommitted
+  work at the time of writing.
+- Merging PR #4 was **not** approval to execute — it put the plan on `master`.
+  Saffron was asked directly whether to start and has not answered.
+
+## Next Steps
+
+1. **Delete the junk count**, before anything reads it:
+   ```sql
+   delete from shop_stock_takes
+   where take_date = '2026-07-29' and source = 'sheet'
+     and product_name_raw in (select product_name_raw from shop_product_lookup
+                              where category = 'Consumables');
+   ```
+   38 rows. Scoped so the shop dashboard's own 2026-07-29 set (65 rows,
+   `source='manual'`) is untouched.
+2. **Fix `index.html`** — multiply `qty_cases` by `pack_size` in both delivery
+   reductions in `computeItem()` (`ordersBetween` and `ordersSince`). See Gotchas.
+3. **Parameterise `Code.gs`** — `syncProducts(sheet, category)` etc. for the two
+   tab pairs; `buildCountSheet` writes `Count (${count_unit})`.
+4. `alter table shop_product_lookup add column monthly_usage_units numeric;` and
+   create the `First Aid` category.
+5. **Rebuild the sheet** — `Products` from `products_v4.csv` with a hidden
+   `product_name_raw` column and a `Par Unit` column; new `First Aid` tab.
+6. **Run `syncProducts`** for both tabs; verify 35 + 33 active and exactly the 4
+   intended deactivations.
+7. Load `baseline_count_2026_08_04.csv` (29 usable lines) and
+   `deliveries_backfill.csv` (26 orders, £1,659.59 net).
+8. **Place the reset order** from the 14 below-minimum lines, re-costed at v4
+   prices, and **log it in `Order Log` before 18/08**.
+9. **Count Tue 18/08 as count 2.**
+
+## Open Questions / Blockers
+
+All need Saffron. Full text in `PLAN-V4.md` §12.
+
+- **Whether to start executing.** Asked directly, not answered. Steps 1–4 depend
+  on nothing else.
+- **3 `Par Unit` rows** — Blue Cloth, Ice Bath Sanitiser, Nitrile Gloves. (Wet Kit
+  Bags no longer blocks the order, only the quantity.)
+- **Water Softener Salt: £149.99 for what?** Pack size blank, note says "6 packs
+  to fill tub". Per-bag vs per-pallet moves the shopping list by an order of
+  magnitude. Keep out of any costed order until settled.
+- **`Microfibre Cloths` has no category** — the only blank on v4. Suggested
+  `Staff Room`.
+- **Does the kit supplier sell a BS 8599-1 refill pack?** The whole first-aid
+  ordering plan rests on it. A phone call, not a modelling problem.
+- **Concept Spa's VAT basis** — last unverified line, £15.00 exposure.
+- **Tampons and pads have a blank `Par Qty`.** On a confirmed surplus (256 and 484
+  items) blank means "do not reorder", but it should be stated rather than left as
+  an empty cell someone later fills in as an oversight.
+
+## Environment & Config Notes
+
+- Repo `ONE-LDN/consumables-dashboard`, **public**, Pages enabled, default branch
+  `master` at `f104249`.
+- Working branch `claude/consumables-dashboard-planning-u2apmy`. **PR #4 merged**
+  — per the branch rules, follow-up work restarts the branch from `master`; do not
+  stack on merged history or reuse PR #4.
+- Commits this session: `a2e6541`, `94f427a`, `2396d9a`, `5fa633b`.
+- **No CI.** No `.github/workflows`; `get_status` returns `total_count: 0`. There
+  is nothing to go green — do not wait on checks.
+- Supabase `ljjwssicvvyyueyznmou`. Tables `shop_product_lookup`,
+  `shop_stock_takes`, `shop_consumable_deliveries`. `shop_stock_takes` is **shared
+  with the shop dashboard** — always scope deletes by category.
+- `Code.gs` config: `PRODUCTS_SHEET='Products'`, `COUNT_SHEET='Stock Count'`,
+  `ORDER_SHEET='Order Log'`, `CATEGORY='Consumables'`; reconciliation key is
+  `product_name_raw`.
+- Credential names only: `index.html` carries the Supabase **anon** key (public by
+  design, behind RLS). Apps Script needs `SUPABASE_SERVICE_KEY` — the
+  `service_role` key — which per `apps-script/SETUP.md` must **never** be
+  committed. It is not in this repo and must not be.
+- **0 open issues** on the repo. The 2026-08-05 entry says "2 open issues"; there
+  are none, so that line is stale.
+
+## Notes & Gotchas
+
+- **`index.html` adds packs to items.** `computeItem()` computes
+  `older.actual_count + ordersBetween − newer.actual_count`, but `ordersBetween`
+  sums `qty_cases`, which is **packs**, while counts become **items**. A delivery
+  of one bin-bag pack reads as 1 bag, not 200. This must land in the same change
+  as the unit switch or the first two counts produce nonsense — it silently
+  corrupts the very data the reset exists to collect.
+- **`syncProducts()` still deactivates the whole category before upserting.** Run
+  against a sheet with no `product_name_raw` column it deactivates all 39 live
+  rows and inserts 35 unrelated ones. The hidden key column is what makes it safe.
+- **The v4 `Pack Size` column does not always mean items-per-order-unit.** Blue
+  Cloth reads 150, which is *sheets per roll*; the order unit is a 6-roll case.
+  Handled by `PACK_OVERRIDE`; worth fixing at source.
+- **The 04/08 count's four container exceptions do not follow one rule** —
+  tampons and pads are packs, bin bags is half a pack, wet kit bags is items. This
+  is precisely why basis belongs per product (`count_basis`) rather than asserted
+  once for the sheet.
+- **Blank count cells are not zeros.** Microfibre Cloths and Notepads were not
+  counted. Recording them as 0 would fabricate a stockout.
+- **A weekly count resolves about one unit.** Products moving under one unit a
+  week show nothing on a Tuesday; the 5L refills take a quarter to read. Expected,
+  not a fault.
+- **Nothing may hit zero during the measurement window.** A stockout reads as low
+  consumption and corrupts that product's baseline. During the reset, err generous.
+- **Burn rate is still not consumption** (a delivery triggers a dispenser refill
+  round) and **the purchase rate is still a floor** (ordering was reactive). Those
+  two conclusions from 2026-08-05 survive; only the *numbers* were retracted.
+- **`hs_refills` and `blue_plasters` were deliberately reused** as first-aid keys
+  rather than minting `fa_*` ones — they are live rows carrying real prices
+  (£24.53, £3.57).
+- **MCP servers flap badly in this environment.** Expect `ToolSearch` to be needed
+  repeatedly. `send_later` and `CronCreate` both proved unreliable for PR
+  check-ins, and both are session-scoped regardless.
+
+---
+
 # Sheet migration, minimum-stock model, first aid and VAT
 **Date:** 2026-08-05
 **Project:** ONE LDN consumables dashboard — catalogue migration & inventory method
