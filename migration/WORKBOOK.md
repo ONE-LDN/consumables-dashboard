@@ -254,14 +254,24 @@ checked.
 `product_type` **already exists** and takes `Category` directly. Three do not:
 
 ```sql
-alter table shop_product_lookup add column count_unit    text;
-alter table shop_product_lookup add column count_step    numeric;
-alter table shop_product_lookup add column min_confirmed boolean;
-alter table shop_product_lookup add column order_class   text;
+alter table shop_product_lookup add column count_unit          text;
+alter table shop_product_lookup add column count_step          numeric;
+alter table shop_product_lookup add column min_confirmed       boolean;
+alter table shop_product_lookup add column order_class         text;
+alter table shop_product_lookup add column monthly_usage_units numeric;
 
 -- REQUIRED: minimums can be fractional. Blue Cloth's is a quarter of a roll.
 alter table shop_product_lookup alter column min_stock_units type numeric;
 ```
+
+**All six statements, or none.** `index.html` names every one of those columns in
+its select, so the dashboard 400s and renders nothing until they all exist. That
+is the intended failure — it cannot show a stale or half-populated number — but
+it does mean a partial run leaves the page blank rather than degraded.
+
+`product_type` already exists and takes `Category` directly. `monthly_par_packs`
+stops being read by anything and can be dropped later, once nothing references
+it.
 
 ⚠ **`min_stock_units` is currently `integer` and must become `numeric`.**
 `actual_count` is already numeric — half a bottle is a real count of `0.5` — so
@@ -391,6 +401,51 @@ nothing to deactivate; it simply never gets created.
 
 All nine deactivations are intended. Step 7's verification is a confirmation,
 not a check for a mistake.
+
+---
+
+## The dashboard
+
+`index.html` was switched to items in the same change, because a sheet counting
+in items against a dashboard computing in packs is worse than either alone.
+
+| | |
+|---|---|
+| **the bug** | usage added `qty_cases` (packs) to `actual_count` (items). One bin-bag pack read as 1 bag, not 200. Both delivery reductions now convert with `pack_size` |
+| pack size source | the size recorded **on the delivery**, falling back to the catalogue — what arrived is what arrived, and the catalogue can change after |
+| no pack size | the delivery cannot be converted, so usage and est stock stay blank with the reason shown, rather than adding packs to items |
+| units | counts, minimums and usage in items, rendered with the unit; suggested orders in **packs** |
+| order size | clear the minimum, carry a month beyond where a usage figure exists, never less than one pack |
+| refusals | `measure_only` never reaches "order now"; an unconfirmed minimum shows status but withholds the quantity; a missing pack size blanks the order and says why |
+| count precision | movement under two `count_step`s reports as *within count precision* instead of becoming a usage figure |
+| integrity | stock rising with no logged delivery points at the Order Log instead of being discarded |
+| lead time | `LEAD_DAYS` 7 → **2**, confirmed with every supplier |
+
+**Order size is stated as "clear the minimum, plus a month where known" rather
+than a target of "minimum + one pack".** The literal version overshoots badly
+where the minimum is small against the pack: Blue Cloth's quarter-roll minimum
+against a case of 6 would target 6.25 and round up to **two cases — 12 rolls to
+cover a quarter of one**.
+
+### Tests
+
+`node tests/engine.test.js` — 29 cases over the model layer, extracted straight
+out of `index.html`, no dependencies and no build step.
+
+Every serious defect in this project has been a silent arithmetic error that
+produced a *plausible* number: packs added to items, a pack size guessed, a par
+validated against its own source, a fractional minimum rounded to zero. None of
+them looked wrong on screen. The cases that bit are pinned so they cannot return.
+
+Worth recording: two assertions written from memory while building this failed
+against the suite, and **the code was right both times** — a delivery predating
+the last count needs no conversion, and the cadence fallback correctly reads
+`ok` when an order landed a week ago. Reasoning about this engine unaided is not
+reliable, which is the argument for the file existing.
+
+Not covered by the tests: the render layer. That was checked separately in a
+browser against mocked Supabase responses — no console errors, fractional counts
+and unit labels correct, shopping list grouped by supplier with net totals.
 
 ## Known gaps
 
