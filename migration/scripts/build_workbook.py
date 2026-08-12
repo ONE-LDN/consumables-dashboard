@@ -147,6 +147,22 @@ FIELD_UPDATE = {
         "product link supplied 2026-08-12; pack size and price still needed from "
         "the listing",
     ),
+    # v4 left both sanitary lines with a blank Par Qty where v3 said 64 and 44.
+    # Both are in confirmed surplus (256 and 484 items at the 04/08 count), so
+    # blank almost certainly meant "do not reorder" — but a blank cell reads as
+    # an oversight and invites someone to fill it in wrongly later. Restoring
+    # v3's own figure states it instead, and changes nothing operationally:
+    # 256 > 64 and 484 > 44, so neither triggers an order.
+    "tampons": (
+        {"par_qty_sheet": "1", "par_unit": "packs"},
+        "Par restored from v3 (64 items = 1 box of 64); blank in v4. In "
+        "confirmed surplus at 256 items, so this does not trigger an order",
+    ),
+    "pads": (
+        {"par_qty_sheet": "1", "par_unit": "packs"},
+        "Par restored from v3 (44 items = 1 packet of 44); blank in v4. In "
+        "confirmed surplus at 484 items, so this does not trigger an order",
+    ),
     # Procurement quote: 500 x £3.59 = £1,795.00 net, +£68.01 delivery,
     # sub-total £1,863.01 ex VAT, £2,235.61 inc. ✓
     #
