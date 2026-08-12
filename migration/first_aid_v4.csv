@@ -1,0 +1,34 @@
+product_name_raw,display_name,group,item_class,required_items,counted_2026_08_04,short_items,reorderable,_review
+blue_plasters,Washproof Plasters (blue detectable),Required,consumable,160,0,160,yes,no pack size or price on record
+fa_sterile_wipes,Sterile Wipes,Required,consumable,80,40,40,yes,no pack size or price on record
+fa_safety_pins,Safety Pins,Required,consumable,48,44,4,yes,no pack size or price on record
+fa_gloves_nitrile,Nitrile Gloves (individual),Required,consumable,24,12,12,yes,no pack size or price on record
+fa_dressing_12x12,First Aid Dressing 12x12cm,Required,consumable,8,4,4,yes,no pack size or price on record
+fa_finger_dressing,Finger Dressing,Required,consumable,8,1,7,yes,no pack size or price on record
+fa_triangular_bandages,Triangular Bandages,Required,consumable,8,12,0,yes,no pack size or price on record
+fa_eye_pad_bandages,Eye Pad Bandages,Required,consumable,8,23,0,yes,no pack size or price on record
+fa_dressing_18x18,First Aid Dressing 18x18cm,Required,consumable,4,3,1,yes,no pack size or price on record
+fa_burn_dressing_10x10,Burn Dressing 10x10cm,Required,consumable,4,2,2,yes,no pack size or price on record
+fa_conforming_bandages,Conforming Bandages,Required,consumable,4,2,2,yes,no pack size or price on record
+fa_waterproof_tape,Waterproof Tape,Required,consumable,4,0,4,yes,no pack size or price on record
+fa_face_shield,Face Shield,Required,consumable,4,3,1,yes,no pack size or price on record
+fa_foil_blankets,Foil Blankets,Required,consumable,4,3,1,yes,no pack size or price on record
+fa_clothing_cutters,Clothing Cutters,Required,equipment,4,0,4,no,check present only
+fa_gauze_swabs,Gauze Swabs / Non-Woven Compress,Held,consumable,,14,,yes,no pack size or price on record
+fa_plasters_beige,Adhesive Plasters (non-detectable),Held,consumable,,222,,yes,no pack size or price on record
+fa_elastic_bandages,Elastic Bandages,Held,consumable,,4,,yes,no pack size or price on record
+fa_cotton_wool,Cotton Wool (pads / balls),Held,consumable,,4,,yes,no pack size or price on record
+fa_crepe_bandages,Crepe Cotton Bandages,Held,consumable,,4,,yes,no pack size or price on record
+fa_eye_wash_pod,Sterile Eye Wash Pod,Held,consumable,,2,,yes,no pack size or price on record
+fa_burn_gel,Emergency Burn Gel,Held,consumable,,1,,yes,no pack size or price on record
+fa_blanket,First Aid Blanket,Held,consumable,,1,,yes,no pack size or price on record
+fa_gloves_vinyl,Vinyl Gloves,Held,consumable,,2,,yes,no pack size or price on record
+fa_nonadherent_10x10,Non-Adherent Dressing 10x10cm,Held,consumable,,1,,yes,no pack size or price on record
+fa_cotton_tips,Cotton Tips,Held,consumable,,1,,yes,no pack size or price on record
+fa_plaster_sheet,Plaster Sheet,Held,consumable,,1,,yes,no pack size or price on record
+fa_adhesive_tape,Adhesive Tape,Held,consumable,,2,,yes,no pack size or price on record
+fa_tourniquet,Tourniquet,Equipment,equipment,1,1,0,no,check present only
+fa_tweezers,Tweezers,Equipment,equipment,1,1,0,no,check present only
+fa_safety_scissors,Safety Scissors,Equipment,equipment,1,1,0,no,check present only
+hs_refills,BS 8599-1 Refill Pack,Order unit,order_unit,4,,,yes,no pack size or price on record
+ice_packs,Ice Packs,Order unit,consumable,16,11,5,yes,no pack size or price on record

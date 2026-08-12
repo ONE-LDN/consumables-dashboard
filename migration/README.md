@@ -1,5 +1,24 @@
 # Migration — `consumables_catalogue_v2` → dashboard catalogue
 
+> ## ⚠ Largely superseded — read [`PLAN-V4.md`](PLAN-V4.md) first
+>
+> The product list was rebuilt again as **`consumables_catalogue_v4`** (35
+> products; first aid split onto its own tab; a `Pack Size` column added;
+> several suppliers changed). `PLAN-V4.md` is the current plan and §9 of it says
+> which files here are still good and which are dead.
+>
+> Three things below are now known to be wrong or obsolete:
+>
+> - **The `2026-07-29` stock take is not real data.** All 38 counts are the
+>   number `6`. It is deleted, not migrated. This document and
+>   `MINIMUM-STOCK.md` both treat it as a genuine count; they should not.
+> - Findings **1, 3, 5 and 6** below are resolved by v4. Findings **2 and 4**
+>   (the sync hazard, and category meaning) are still live.
+> - `products_tab_final.csv`, `min_stock_model.csv`, `crosswalk.csv`,
+>   `SHOPPING-LIST.md` and `shopping_list.csv` describe a 52-product list with
+>   old suppliers and guessed pack sizes. Superseded by `products_v4.csv`,
+>   `first_aid_v4.csv` and `unit_basis_v4.csv`.
+
 Analysis of the new Google Sheet
 ([`1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4`](https://docs.google.com/spreadsheets/d/1DA77H1SG9aLELsvNFxL6VksNvVCFj5_xHZftgV2UPC4/edit))
 against what is live in Supabase (`shop_product_lookup`, `category='Consumables'`).
