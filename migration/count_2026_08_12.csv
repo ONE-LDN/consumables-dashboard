@@ -1,31 +1,31 @@
-take_date,product_name_raw,display_name,count,count_unit,count_step,location
-2026-08-12,d_batteries,D Batteries (Ergs),5,batteries,1,FOH Desk
-2026-08-12,hair_bands,Hair Bands,0,bands,1,FOH Desk
-2026-08-12,key_fobs,Key Fobs,0,fobs,1,FOH Desk
-2026-08-12,pens,Pens,1,pens,1,FOH Desk
-2026-08-12,printer_ink,Printer Ink,3,cartridges,1,FOH Desk
-2026-08-12,paper_printer,Printer Paper,0.5,reams,0.5,FOH Desk
-2026-08-12,blue_cloth,Blue Cloth Roll,2,rolls,0.25,Cafe
-2026-08-12,puly_caffe_cleaner,Coffee Machine Cleaner,3,bottles,0.25,Cafe
-2026-08-12,washing_up_liquid,Washing Up Liquid 5L,1.5,bottles,0.25,Cafe
-2026-08-12,blue_rolls,Blue Roll (centrefeed),22,rolls,1,Gym Floor
-2026-08-12,chalk_block,Chalk Block,6,blocks,0.25,Gym Floor
-2026-08-12,glade_sprays,Air Freshener Spray,3,cans,1,Toiletries
-2026-08-12,conditioner,Conditioner 5L,3,bottles,0.25,Toiletries
-2026-08-12,sure_deodorant_men,Deodorant - Men,28,cans,1,Toiletries
-2026-08-12,sure_deodorant_women,Deodorant - Women,28,cans,1,Toiletries
-2026-08-12,moisturiser,Hand & Body Lotion 5L,4,bottles,0.25,Toiletries
-2026-08-12,sanitiser_gel,Hand Sanitiser 5L,2,bottles,0.25,Toiletries
-2026-08-12,hand_wash,Hand Wash 5L,3,bottles,0.25,Toiletries
-2026-08-12,chill_tub_filters,Ice Bath Filter,6,filters,1,Toiletries
-2026-08-12,chill_tubs_sanitiser,Ice Bath Sanitiser,3,tubs,0.25,Toiletries
-2026-08-12,pads,Sanitary Pads,440,pads,1,Toiletries
-2026-08-12,shampoo,Shampoo & Body Wash 5L,6,bottles,0.25,Toiletries
-2026-08-12,tampons,Tampons,120,tampons,1,Toiletries
-2026-08-12,toilet_rolls,Toilet Roll,16,rolls,1,Toiletries
-2026-08-12,wet_kit_bags,Wet Kit Bags,2,rolls,0.25,Toiletries
-2026-08-12,bin_bags,Bin Bags 80L,500,bags,1,Staff Room
-2026-08-12,microfibre_cloths,Microfibre Cloths,0,cloths,1,Staff Room
-2026-08-12,multipurpose_cleaner,Multi-Surface Cleaner 5L,2.75,bottles,0.25,Staff Room
-2026-08-12,blue_gloves_large,Nitrile Gloves (L),180,gloves,1,Staff Room
-2026-08-12,water_softener_salt,Water Softener Salt,45,bags,1,Plant room
+take_date,product_name_raw,display_name,count,count_unit,count_step,location,note
+2026-08-12,d_batteries,D Batteries (Ergs),5,batteries,1,FOH Desk,
+2026-08-12,hair_bands,Hair Bands,0,bands,1,FOH Desk,
+2026-08-12,key_fobs,Key Fobs,0,fobs,1,FOH Desk,
+2026-08-12,pens,Pens,1,pens,1,FOH Desk,
+2026-08-12,printer_ink,Printer Ink,3,cartridges,1,FOH Desk,
+2026-08-12,paper_printer,Printer Paper,0.5,reams,0.5,FOH Desk,
+2026-08-12,blue_cloth,Blue Cloth Roll,2,rolls,0.25,Cafe,
+2026-08-12,puly_caffe_cleaner,Coffee Machine Cleaner,3,bottles,0.25,Cafe,
+2026-08-12,washing_up_liquid,Washing Up Liquid 5L,1.5,bottles,0.25,Cafe,
+2026-08-12,blue_rolls,Blue Roll (centrefeed),22,rolls,1,Gym Floor,
+2026-08-12,chalk_block,Chalk Block,6,blocks,0.25,Gym Floor,
+2026-08-12,glade_sprays,Air Freshener Spray,3,cans,1,Toiletries,
+2026-08-12,conditioner,Conditioner 5L,3,bottles,0.25,Toiletries,
+2026-08-12,sure_deodorant_men,Deodorant - Men,28,cans,1,Toiletries,
+2026-08-12,sure_deodorant_women,Deodorant - Women,28,cans,1,Toiletries,
+2026-08-12,moisturiser,Hand & Body Lotion 5L,4,bottles,0.25,Toiletries,
+2026-08-12,sanitiser_gel,Hand Sanitiser 5L,2,bottles,0.25,Toiletries,
+2026-08-12,hand_wash,Hand Wash 5L,3,bottles,0.25,Toiletries,
+2026-08-12,chill_tub_filters,Ice Bath Filter,6,filters,1,Toiletries,
+2026-08-12,chill_tubs_sanitiser,Ice Bath Sanitiser,3,tubs,0.25,Toiletries,
+2026-08-12,pads,Sanitary Pads,440,pads,1,Toiletries,
+2026-08-12,shampoo,Shampoo & Body Wash 5L,6,bottles,0.25,Toiletries,
+2026-08-12,tampons,Tampons,120,tampons,1,Toiletries,usage 136 items = 2 boxes of 64 + 8; read as ~2 boxes and confirmed 2026-08-12
+2026-08-12,toilet_rolls,Toilet Roll,16,rolls,1,Toiletries,
+2026-08-12,wet_kit_bags,Wet Kit Bags,2,rolls,0.25,Toiletries,
+2026-08-12,bin_bags,Bin Bags 80L,500,bags,1,Staff Room,
+2026-08-12,microfibre_cloths,Microfibre Cloths,0,cloths,1,Staff Room,
+2026-08-12,multipurpose_cleaner,Multi-Surface Cleaner 5L,2.75,bottles,0.25,Staff Room,
+2026-08-12,blue_gloves_large,Nitrile Gloves (L),180,gloves,1,Staff Room,
+2026-08-12,water_softener_salt,Water Softener Salt,45,bags,1,Plant room,
